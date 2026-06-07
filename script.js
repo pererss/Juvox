@@ -1,10 +1,10 @@
 // ========== НАСТРОЙКИ ==========
-let currentTheme = localStorage.getItem('juvox_theme') || 'dark';
+let currentTheme = localStorage.getItem('juvox_theme') || 'default';
 let currentEngine = localStorage.getItem('juvox_engine') || 'google';
-let tabs = [{ id: 1, url: '' }];
-let activeTabId = 1;
+let tabs = [];
+let activeTabId = null;
+let tabCounter = 1;
 
-// Поисковые движки
 const engines = {
     google: { name: 'Google', url: 'https://www.google.com/search?q=', icon: 'https://www.google.com/favicon.ico' },
     yandex: { name: 'Яндекс', url: 'https://yandex.ru/search/?text=', icon: 'https://yandex.ru/favicon.ico' },
@@ -12,30 +12,29 @@ const engines = {
     bing: { name: 'Bing', url: 'https://www.bing.com/search?q=', icon: 'https://www.bing.com/favicon.ico' }
 };
 
-// Подсказки (популярные сайты)
-const suggestionsList = [
-    'youtube.com', 'github.com', 'chat.openai.com', 'google.com', 'yandex.ru',
-    'web.telegram.org', 'x.com', 'reddit.com', 'twitch.tv', 'netflix.com'
+// Популярные запросы для подсказок
+const popularQueries = [
+    'youtube.com', 'github.com', 'chat.openai.com', 'google.com', 
+    'яндекс', 'погода', 'новости', 'переводчик', 'telegram web',
+    'gmail', 'вконтакте', 'ozon', 'wildberries', '2gis'
 ];
 
 // Применение темы
 function applyTheme() {
-    document.body.classList.remove('dark', 'light');
-    document.body.classList.add(currentTheme);
+    document.body.className = '';
+    document.body.classList.add(`theme-${currentTheme}`);
     localStorage.setItem('juvox_theme', currentTheme);
-    const themeIcon = document.querySelector('#themeToggle i');
-    if (themeIcon) {
-        themeIcon.className = currentTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-    }
 }
 
-// Переключение темы
 function toggleTheme() {
-    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    const themes = ['default', 'ocean', 'sunset', 'forest', 'night'];
+    let currentIndex = themes.indexOf(currentTheme);
+    let nextIndex = (currentIndex + 1) % themes.length;
+    currentTheme = themes[nextIndex];
     applyTheme();
 }
 
-// Обновление иконки поисковой системы
+// Обновление UI поисковой системы
 function updateEngineUI() {
     const engine = engines[currentEngine];
     document.getElementById('engineIcon').src = engine.icon;
@@ -58,25 +57,24 @@ function searchOrNavigate(query) {
         const engine = engines[currentEngine];
         openUrl(engine.url + encodeURIComponent(query));
     }
+    
+    // Скрыть подсказки
+    document.getElementById('suggestions').classList.remove('show');
 }
 
-// Открыть URL
-function openUrl(url) {
-    const iframe = document.getElementById('webpage');
-    const startPage = document.getElementById('startPage');
-    const webpage = document.getElementById('webpage');
-    
-    startPage.style.display = 'none';
-    webpage.style.display = 'block';
-    iframe.src = url;
-    
-    // Добавляем вкладку, если нужно
-    const activeTab = tabs.find(t => t.id === activeTabId);
-    if (activeTab) {
-        activeTab.url = url;
+// Открыть URL в активной вкладке
+function openUrl(url, tabId = null) {
+    let targetTabId = tabId || activeTabId;
+    let tab = tabs.find(t => t.id === targetTabId);
+    if (tab) {
+        tab.url = url;
+        const iframe = document.getElementById(`iframe-${tab.id}`);
+        if (iframe) {
+            iframe.src = url;
+        }
+        renderTabs();
+        saveTabs();
     }
-    renderTabs();
-    saveTabs();
 }
 
 // Показать подсказки
@@ -87,16 +85,20 @@ function showSuggestions(query) {
         return;
     }
     
-    const filtered = suggestionsList.filter(s => s.toLowerCase().includes(query.toLowerCase())).slice(0, 8);
+    const filtered = popularQueries.filter(q => 
+        q.toLowerCase().includes(query.toLowerCase())
+    ).slice(0, 8);
+    
     if (filtered.length === 0) {
         suggestionsDiv.classList.remove('show');
         return;
     }
     
-    suggestionsDiv.innerHTML = filtered.map(s => `
-        <div class="suggestion-item" data-value="${s}">
+    suggestionsDiv.innerHTML = filtered.map(q => `
+        <div class="suggestion-item" data-value="${q}">
             <i class="fas fa-search"></i>
-            <span>${s}</span>
+            <div class="suggestion-text">${q}</div>
+            <div class="suggestion-url">${q.includes('.') ? 'https://' + q : 'поиск'}</div>
         </div>
     `).join('');
     
@@ -114,41 +116,59 @@ function showSuggestions(query) {
 
 // Рендер вкладок
 function renderTabs() {
-    const tabBar = document.getElementById('tabBar');
-    tabBar.innerHTML = '';
+    const tabsContainer = document.getElementById('tabs');
+    const contentContainer = document.getElementById('content');
+    
+    tabsContainer.innerHTML = '';
+    contentContainer.innerHTML = '';
+    
     tabs.forEach(tab => {
+        // Рендер вкладки в панели
         const tabEl = document.createElement('div');
         tabEl.className = `tab ${tab.id === activeTabId ? 'active' : ''}`;
         tabEl.innerHTML = `
-            <span>${tab.url ? new URL(tab.url).hostname || 'Сайт' : 'Новая вкладка'}</span>
-            <button class="close-tab" data-id="${tab.id}">✕</button>
+            <span>${tab.title || 'Новая вкладка'}</span>
+            <button class="close-btn" data-id="${tab.id}">✕</button>
         `;
         tabEl.onclick = (e) => {
-            if (!e.target.classList.contains('close-tab')) switchTab(tab.id);
+            if (!e.target.classList.contains('close-btn')) {
+                switchTab(tab.id);
+            }
         };
-        tabBar.appendChild(tabEl);
+        tabsContainer.appendChild(tabEl);
+        
+        // Рендер контента
+        const iframe = document.createElement('iframe');
+        iframe.id = `iframe-${tab.id}`;
+        iframe.src = tab.url || 'about:blank';
+        iframe.onload = () => {
+            try {
+                tab.title = iframe.contentWindow.document.title || 'Страница';
+                renderTabs();
+                saveTabs();
+            } catch(e) {}
+        };
+        contentContainer.appendChild(iframe);
     });
     
-    // Кнопка новой вкладки
-    const newTabBtn = document.createElement('div');
-    newTabBtn.className = 'tab';
-    newTabBtn.innerHTML = '<span>+ Новая вкладка</span>';
-    newTabBtn.onclick = addTab;
-    tabBar.appendChild(newTabBtn);
+    // Обработчики закрытия
+    document.querySelectorAll('.close-btn').forEach(btn => {
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            closeTab(parseInt(btn.getAttribute('data-id')));
+        };
+    });
 }
 
 // Переключение вкладки
 function switchTab(id) {
     activeTabId = id;
-    const tab = tabs.find(t => t.id === id);
-    if (tab && tab.url) {
-        document.getElementById('webpage').src = tab.url;
-        document.getElementById('startPage').style.display = 'none';
-        document.getElementById('webpage').style.display = 'block';
-    } else {
-        document.getElementById('startPage').style.display = 'flex';
-        document.getElementById('webpage').style.display = 'none';
-    }
+    
+    // Скрыть/показать iframe
+    document.querySelectorAll('#content iframe').forEach((iframe, idx) => {
+        iframe.style.display = idx === tabs.findIndex(t => t.id === id) ? 'block' : 'none';
+    });
+    
     renderTabs();
     saveTabs();
 }
@@ -156,10 +176,12 @@ function switchTab(id) {
 // Новая вкладка
 function addTab() {
     const newId = Date.now();
-    tabs.push({ id: newId, url: '' });
+    tabs.push({ 
+        id: newId, 
+        url: '', 
+        title: 'Новая вкладка'
+    });
     activeTabId = newId;
-    document.getElementById('startPage').style.display = 'flex';
-    document.getElementById('webpage').style.display = 'none';
     renderTabs();
     saveTabs();
 }
@@ -168,28 +190,22 @@ function addTab() {
 function closeTab(id) {
     const index = tabs.findIndex(t => t.id === id);
     if (index !== -1) tabs.splice(index, 1);
+    
     if (tabs.length === 0) {
-        tabs.push({ id: Date.now(), url: '' });
+        addTab();
     }
+    
     if (activeTabId === id) {
-        activeTabId = tabs[0].id;
-        const tab = tabs[0];
-        if (tab && tab.url) {
-            document.getElementById('webpage').src = tab.url;
-            document.getElementById('startPage').style.display = 'none';
-            document.getElementById('webpage').style.display = 'block';
-        } else {
-            document.getElementById('startPage').style.display = 'flex';
-            document.getElementById('webpage').style.display = 'none';
-        }
+        activeTabId = tabs[0]?.id;
     }
+    
     renderTabs();
     saveTabs();
 }
 
 // Сохранение вкладок
 function saveTabs() {
-    const tabsToSave = tabs.map(t => ({ id: t.id, url: t.url }));
+    const tabsToSave = tabs.map(t => ({ id: t.id, url: t.url, title: t.title }));
     localStorage.setItem('juvox_tabs', JSON.stringify(tabsToSave));
     localStorage.setItem('juvox_activeTab', activeTabId);
 }
@@ -203,21 +219,18 @@ function loadTabs() {
             const savedActive = localStorage.getItem('juvox_activeTab');
             if (savedActive && tabs.find(t => t.id == savedActive)) {
                 activeTabId = parseInt(savedActive);
-            } else {
+            } else if (tabs.length > 0) {
                 activeTabId = tabs[0].id;
-            }
-            const activeTab = tabs.find(t => t.id === activeTabId);
-            if (activeTab && activeTab.url) {
-                document.getElementById('webpage').src = activeTab.url;
-                document.getElementById('startPage').style.display = 'none';
-                document.getElementById('webpage').style.display = 'block';
             } else {
-                document.getElementById('startPage').style.display = 'flex';
-                document.getElementById('webpage').style.display = 'none';
+                addTab();
             }
-            renderTabs();
-        } catch(e) {}
+        } catch(e) {
+            addTab();
+        }
+    } else {
+        addTab();
     }
+    renderTabs();
 }
 
 // Инициализация
@@ -226,8 +239,9 @@ function init() {
     updateEngineUI();
     loadTabs();
     
-    // Обработчики событий
+    // Обработчики
     document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+    document.getElementById('newTabBtn').addEventListener('click', addTab);
     document.getElementById('engineBtn').addEventListener('click', () => {
         document.getElementById('engineDropdown').classList.toggle('show');
     });
@@ -246,39 +260,10 @@ function init() {
     document.getElementById('searchInput').addEventListener('input', (e) => {
         showSuggestions(e.target.value);
     });
-    document.getElementById('startSearch').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            searchOrNavigate(e.target.value);
-        }
-    });
-    document.getElementById('startSearchBtn').addEventListener('click', () => {
-        const val = document.getElementById('startSearch').value;
-        if (val) searchOrNavigate(val);
-    });
-    document.querySelectorAll('.quick-link').forEach(link => {
-        link.addEventListener('click', () => {
-            const url = link.getAttribute('data-url');
-            if (url) openUrl(url);
-        });
-    });
-    document.getElementById('voiceBtn').addEventListener('click', () => {
-        if ('webkitSpeechRecognition' in window) {
-            const recognition = new webkitSpeechRecognition();
-            recognition.lang = 'ru-RU';
-            recognition.onresult = (event) => {
-                const text = event.results[0][0].transcript;
-                document.getElementById('searchInput').value = text;
-                searchOrNavigate(text);
-            };
-            recognition.start();
-        } else {
-            alert('Голосовой ввод не поддерживается');
-        }
-    });
     
     // Закрытие дропдауна при клике вне
     document.addEventListener('click', (e) => {
-        if (!e.target.closest('.engine-select')) {
+        if (!e.target.closest('.search-engine')) {
             document.getElementById('engineDropdown').classList.remove('show');
         }
         if (!e.target.closest('.search-wrapper')) {
