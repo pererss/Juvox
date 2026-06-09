@@ -3,63 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juvox Workspace</title>
+    <title>Juvox Browser & Search</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <header class="top-bar">
-        <div class="logo">Juvox</div>
-        <div class="search-container-top" id="top-search-area">
-            </div>
-        <button id="theme-toggle" class="theme-btn" title="Сменить тему">🌙</button>
-    </header>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo">Juvox</div>
+            
+            <nav class="nav-menu">
+                <button id="history-btn" class="nav-link">📜 История</button>
+            </nav>
 
-    <div class="main-layout">
-        
-        <aside class="sidebar left-sidebar">
-            <div class="sidebar-title">Вкладки</div>
-            <ul class="tabs-list" id="tabs-container">
-                <li class="tab-item active" data-tab="home">🏠 Стартовая</li>
-                <li class="tab-item add-tab-btn" id="add-tab">+ Новая вкладка</li>
-            </ul>
+            <div class="tabs-section">
+                <h3>Вкладки</h3>
+                <ul id="tabs-container">
+                    <li id="add-tab" class="hidden"></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-footer">
+                <button id="theme-toggle">🌙</button>
+            </div>
         </aside>
 
-        <main class="content-area">
-            <div id="home-screen" class="home-center">
-                <h2 class="welcome-text">Куда отправимся сегодня?</h2>
+        <main class="main-content">
+            <div id="top-search-area"></div>
+
+            <div id="home-screen" class="welcome-container">
+                <h1 class="brand-title">Juvox</h1>
+                <p class="brand-subtitle">Твоя личная приватная поисковая система</p>
+                
                 <div class="search-wrapper">
                     <div class="search-box">
-                        <select id="engine-select">
-                            <option value="https://www.google.com/search?igu=1&q=">Google</option>
-                            <option value="https://yandex.ru/search/?text=">Яндекс</option>
-                        </select>
-                        <input type="text" id="search-input" placeholder="Искать в Juvox..." autocomplete="off">
-                        <button id="search-btn">Полетели</button>
-                    </div>
-                    <div id="dropdown-box" class="dropdown-content hidden">
-                        <ul id="suggestions"></ul>
+                        <input type="text" id="search-input" placeholder="Поиск в интернете..." autocomplete="off">
+                        <div id="suggestions-box" class="suggestions-hidden"></div>
+                        <button id="search-btn">Найти</button>
                     </div>
                 </div>
             </div>
 
-            <div id="web-view-container" class="hidden">
-                <iframe id="web-frame" src="about:blank"></iframe>
-            </div>
+            <div id="web-view-container" class="hidden"></div>
         </main>
-
-        <aside class="sidebar right-sidebar">
-            <div class="sidebar-title">Панель фишек</div>
-            <div class="widget-box">
-                <h4>⏱ История</h4>
-                <ul id="history-list"></ul>
-            </div>
-            <div class="widget-box neon-gradient">
-                <h4>🚀 Juvox AI</h4>
-                <p>Скоро здесь будет встроенный умный помощник.</p>
-            </div>
-        </aside>
-
     </div>
 
     <script src="script.js"></script>
