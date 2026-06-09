@@ -3,52 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juvox Premium Browser</title>
+    <title>Juvox — Персональный Хаб</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body data-bg="default">
+<body>
 
-    <div class="app-container">
-        <aside class="sidebar">
-            <div class="logo">Juvox</div>
+    <div class="juvox-container">
+        
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <button id="sidebar-toggle" class="toggle-btn" title="Свернуть меню">☰</button>
+                <div class="logo">Juvox</div>
+            </div>
             
-            <nav class="nav-menu">
-                <button id="history-btn" class="nav-link">📜 История</button>
-                <button id="settings-btn" class="nav-link">⚙️ Настройки</button>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item active" data-target="home-screen">
+                        <span class="nav-icon">🔍</span> 
+                        <span class="nav-text">Поиск</span>
+                    </li>
+                    <li class="nav-item" data-target="history-screen" id="history-btn">
+                        <span class="nav-icon">📜</span> 
+                        <span class="nav-text">История</span>
+                    </li>
+                    <li class="nav-item" data-target="notes-screen" id="notes-btn">
+                        <span class="nav-icon">📝</span> 
+                        <span class="nav-text">Заметки</span>
+                    </li>
+                    <li class="nav-item" data-target="settings-screen" id="settings-btn">
+                        <span class="nav-icon">⚙️</span> 
+                        <span class="nav-text">Настройки</span>
+                    </li>
+                </ul>
             </nav>
 
-            <div class="tabs-section">
-                <h3>Активные вкладки</h3>
-                <ul id="tabs-container">
-                    <li id="add-tab" class="hidden"></li>
-                </ul>
-            </div>
-
-            <div class="sidebar-footer">
-                <button id="theme-toggle">🌙</button>
-            </div>
+            <button id="theme-toggle" class="theme-btn">🌙</button>
+            
+            <ul id="tabs-container" style="display: none;"><div id="add-tab"></div></ul>
         </aside>
 
         <main class="main-content">
-            <div class="bg-glow glow-1"></div>
-            <div class="bg-glow glow-2"></div>
+            
+            <div id="top-search-area" style="display: none;"></div>
 
-            <div id="top-search-area"></div>
-
-            <div id="home-screen" class="welcome-container">
-                <h1 class="brand-title">Juvox</h1>
-                <p class="brand-subtitle">Твой интернет. Твои правила. Полная приватность.</p>
-                
+            <section id="home-screen" class="view-section">
                 <div class="search-wrapper">
+                    <h1 class="main-title">Juvox</h1>
                     <div class="search-box">
-                        <input type="text" id="search-input" placeholder="Поиск в глобальной сети..." autocomplete="off">
-                        <div id="suggestions-box" class="suggestions-hidden"></div>
+                        <input type="text" id="search-input" placeholder="Ищите всё что угодно, считайте примеры..." autocomplete="off">
                         <button id="search-btn">Найти</button>
+                        <div id="suggestions-box" class="suggestions-hidden"></div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <div id="web-view-container" class="hidden"></div>
+            <div id="web-view-container" class="view-section hidden"></div>
+
+            <section id="history-screen" class="view-section hidden">
+                <div class="section-header">
+                    <h2>📜 История запросов Juvox</h2>
+                    <button id="clear-history-btn" class="danger-btn">Очистить историю</button>
+                </div>
+                <p class="subtitle">Ваши последние поисковые сессии. Нажмите на любой запрос, чтобы повторить поиск.</p>
+                <div id="history-list-container" class="card-box"></div>
+            </section>
+
+            <section id="notes-screen" class="view-section hidden">
+                <h2>📝 Встроенный блокнот</h2>
+                <p class="subtitle">Ваш личный автономный черновик. Любой введенный текст сохраняется моментально и без интернета.</p>
+                <div class="notepad-container">
+                    <textarea id="juvox-notepad" placeholder="Начните писать свои мысли, ссылки или планы здесь..."></textarea>
+                </div>
+            </section>
+
+            <section id="settings-screen" class="view-section hidden">
+                <h2>⚙️ Настройки Juvox</h2>
+                <p class="subtitle">Кастомизация поисковых алгоритмов и конфиденциальности локального браузера.</p>
+                
+                <div class="settings-card">
+                    <div class="setting-item-row">
+                        <div class="setting-info">
+                            <span class="setting-title">Основной поисковый шлюз (Прокси)</span>
+                            <span class="setting-desc">Измените сервер маршрутизации, если глобальный поиск перестает отвечать на запросы.</span>
+                        </div>
+                        <select id="setting-proxy-select" class="juvox-select">
+                            <option value="allorigins">AllOrigins Engine (Рекомендуемый / Стабильный)</option>
+                            <option value="corsproxy">CorsProxy IO (Альтернативный / Быстрый)</option>
+                        </select>
+                    </div>
+
+                    <hr class="settings-divider">
+
+                    <div class="setting-item-row">
+                        <div class="setting-info">
+                            <span class="setting-title">Локальное логирование</span>
+                            <span class="setting-desc">Включение или полное отключение сохранения истории поиска в памяти браузера.</span>
+                        </div>
+                        <button id="btn-toggle-history-save" class="status-btn">Запись истории: ВКЛ</button>
+                    </div>
+                </div>
+                
+                <div class="system-footer">Juvox Engine Engine // Core v2.0 // 2026</div>
+            </section>
+
         </main>
     </div>
 
