@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juvox Browser & Search</title>
+    <title>Juvox Premium Browser</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-bg="default">
 
     <div class="app-container">
         <aside class="sidebar">
@@ -14,10 +14,11 @@
             
             <nav class="nav-menu">
                 <button id="history-btn" class="nav-link">📜 История</button>
+                <button id="settings-btn" class="nav-link">⚙️ Настройки</button>
             </nav>
 
             <div class="tabs-section">
-                <h3>Вкладки</h3>
+                <h3>Активные вкладки</h3>
                 <ul id="tabs-container">
                     <li id="add-tab" class="hidden"></li>
                 </ul>
@@ -29,15 +30,18 @@
         </aside>
 
         <main class="main-content">
+            <div class="bg-glow glow-1"></div>
+            <div class="bg-glow glow-2"></div>
+
             <div id="top-search-area"></div>
 
             <div id="home-screen" class="welcome-container">
                 <h1 class="brand-title">Juvox</h1>
-                <p class="brand-subtitle">Твоя личная приватная поисковая система</p>
+                <p class="brand-subtitle">Твой интернет. Твои правила. Полная приватность.</p>
                 
                 <div class="search-wrapper">
                     <div class="search-box">
-                        <input type="text" id="search-input" placeholder="Поиск в интернете..." autocomplete="off">
+                        <input type="text" id="search-input" placeholder="Поиск в глобальной сети..." autocomplete="off">
                         <div id="suggestions-box" class="suggestions-hidden"></div>
                         <button id="search-btn">Найти</button>
                     </div>
