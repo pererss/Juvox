@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // МЕНЕДЖЕР ВИДЖЕТОВ (НАСТРОЙКИ)
+    // МЕНЕДЖЕР ВИДЖЕТОВ (БЕЗОПАСНЫЙ С ФИКСОМ ОШИБКИ)
     const toggleStopwatchCB = document.getElementById('setting-toggle-stopwatch');
     const mainWidgetsZone = document.getElementById('main-widgets-zone');
     
@@ -58,10 +58,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const showStopwatch = localStorage.getItem('widget-stopwatch-enabled') === 'true';
         if(toggleStopwatchCB) toggleStopwatchCB.checked = showStopwatch;
         
-        if(showStopwatch) {
-            mainWidgetsZone.classList.remove('id-hidden');
-        } else {
-            mainWidgetsZone.classList.add('id-hidden');
+        // Защита: проверяем, что блок разметки действительно существует на странице
+        if (mainWidgetsZone) {
+            if(showStopwatch) {
+                mainWidgetsZone.classList.remove('id-hidden');
+            } else {
+                mainWidgetsZone.classList.add('id-hidden');
+            }
         }
     }
 
@@ -94,7 +97,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (item.id === 'tools-menu-btn') return;
             navItems.forEach(n => n.classList.remove('active'));
             item.classList.add('active');
-            document.getElementById('floating-tools-panel').classList.add('tools-panel-hidden');
+            
+            const toolsPanel = document.getElementById('floating-tools-panel');
+            if (toolsPanel) toolsPanel.classList.add('tools-panel-hidden');
 
             const targetId = item.getAttribute('data-target');
             viewSections.forEach(s => s.classList.add('hidden'));
@@ -112,8 +117,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (targetId === 'history-screen') renderHistoryList();
                 if (targetId === 'feed-screen') {
                     activeFeedTab = "all";
-                    document.getElementById('feed-all-btn').classList.add('active');
-                    document.getElementById('feed-fav-btn').classList.remove('active');
+                    const feedAllBtn = document.getElementById('feed-all-btn');
+                    const feedFavBtn = document.getElementById('feed-fav-btn');
+                    if (feedAllBtn) feedAllBtn.classList.add('active');
+                    if (feedFavBtn) feedFavBtn.classList.remove('active');
                     resetAndLoadFeed();
                 }
             }
@@ -157,13 +164,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadMoreFeedItems() {
         if(isFeedLoading || activeFeedTab === "fav") return;
         isFeedLoading = true;
-        document.getElementById('feed-loader-trigger').style.display = 'block';
+        const loader = document.getElementById('feed-loader-trigger');
+        if (loader) loader.style.display = 'block';
 
         setTimeout(() => {
             const container = document.getElementById('feed-cards-container');
+            if (!container) return;
             const keys = Object.keys(contentDatabase);
             
-            // Генерируем пачку постов из базы
             for(let i=0; i<4; i++) {
                 const source = keys[Math.floor(Math.random() * keys.length)];
                 const list = contentDatabase[source];
@@ -203,7 +211,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderFavoritesOnly() {
         const container = document.getElementById('feed-cards-container');
-        document.getElementById('feed-loader-trigger').style.display = 'none';
+        if (!container) return;
+        const loader = document.getElementById('feed-loader-trigger');
+        if (loader) loader.style.display = 'none';
         container.innerHTML = '';
 
         if(likedPosts.length === 0) {
@@ -232,42 +242,52 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    document.getElementById('feed-all-btn').addEventListener('click', () => {
-        activeFeedTab = "all";
-        document.getElementById('feed-all-btn').classList.add('active');
-        document.getElementById('feed-fav-btn').classList.remove('active');
-        resetAndLoadFeed();
-    });
+    const feedAllBtn = document.getElementById('feed-all-btn');
+    if (feedAllBtn) {
+        feedAllBtn.addEventListener('click', () => {
+            activeFeedTab = "all";
+            feedAllBtn.classList.add('active');
+            const feedFavBtn = document.getElementById('feed-fav-btn');
+            if (feedFavBtn) feedFavBtn.classList.remove('active');
+            resetAndLoadFeed();
+        });
+    }
 
-    document.getElementById('feed-fav-btn').addEventListener('click', () => {
-        activeFeedTab = "fav";
-        document.getElementById('feed-fav-btn').classList.add('active');
-        document.getElementById('feed-all-btn').classList.remove('active');
-        renderFavoritesOnly();
-    });
+    const feedFavBtn = document.getElementById('feed-fav-btn');
+    if (feedFavBtn) {
+        feedFavBtn.addEventListener('click', () => {
+            activeFeedTab = "fav";
+            feedFavBtn.classList.add('active');
+            if (feedAllBtn) feedAllBtn.classList.remove('active');
+            renderFavoritesOnly();
+        });
+    }
 
     const scrollPanel = document.getElementById('main-scroll-panel');
-    scrollPanel.addEventListener('scroll', () => {
-        if(activeFeedTab !== "all" || document.getElementById('feed-screen').classList.contains('hidden')) return;
-        if (scrollPanel.scrollTop + scrollPanel.clientHeight >= scrollPanel.scrollHeight - 50) {
-            loadMoreFeedItems();
-        }
-    });
+    if (scrollPanel) {
+        scrollPanel.addEventListener('scroll', () => {
+            const feedScreen = document.getElementById('feed-screen');
+            if(activeFeedTab !== "all" || !feedScreen || feedScreen.classList.contains('hidden')) return;
+            if (scrollPanel.scrollTop + scrollPanel.clientHeight >= scrollPanel.scrollHeight - 50) {
+                loadMoreFeedItems();
+            }
+        });
+    }
 
-    // ИСПРАВЛЕННЫЙ, НЕЛОМАЮЩИЙСЯ ПОИСК (БЕЗ ДЫРЯВЫХ ПРОКСИ)
+    // ИСПРАВЛЕННЫЙ ПОИСК
     const searchInput = document.getElementById('search-input');
     const searchBtn = document.getElementById('search-btn');
 
     function launchSearch() {
+        if (!searchInput) return;
         const query = searchInput.value.trim();
         if(!query) return;
 
-        // История записей
         let history = JSON.parse(localStorage.getItem('juvox-history')) || [];
         if(!history.includes(query)) { history.unshift(query); localStorage.setItem('juvox-history', JSON.stringify(history.slice(0,10))); }
 
-        homeScreen.classList.add('hidden');
-        webViewContainer.classList.remove('hidden');
+        if (homeScreen) homeScreen.classList.add('hidden');
+        if (webViewContainer) webViewContainer.classList.remove('hidden');
 
         if (topSearchArea && searchBox) {
             topSearchArea.style.display = 'block';
@@ -275,9 +295,8 @@ document.addEventListener('DOMContentLoaded', () => {
             topSearchArea.appendChild(searchBox);
         }
 
-        webViewContainer.innerHTML = '';
+        if (webViewContainer) webViewContainer.innerHTML = '';
 
-        // Вычисляем активные фильтры источников
         const activeSources = [];
         document.querySelectorAll('.filter-grid input[type="checkbox"]').forEach(cb => {
             if(cb.checked) activeSources.push(cb.value);
@@ -288,13 +307,10 @@ document.addEventListener('DOMContentLoaded', () => {
         activeSources.forEach(src => {
             const list = contentDatabase[src] || [];
             list.forEach(item => {
-                // Ищем совпадения по тексту или названию
                 if(item.title.toLowerCase().includes(query.toLowerCase()) || item.body.toLowerCase().includes(query.toLowerCase()) || query.length > 2) {
                     foundResults++;
                     const card = document.createElement('div');
                     card.className = 'feed-post-card';
-                    card.style.background = 'var(--bg-card)';
-                    card.style.boxShadow = 'var(--shadow-md)';
 
                     card.innerHTML = `
                         <span class="hub-badge" style="background:var(--accent-color);">${src.toUpperCase()}</span>
@@ -307,18 +323,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     `;
 
                     card.querySelector('.save-note-btn').addEventListener('click', () => {
-                        const notepad = document.getElementById('juvox-notepad');
-                        notepad.value += `\n[${src.toUpperCase()}] ${item.title}\n${item.body}\n`;
-                        localStorage.setItem('juvox-notes-data', notepad.value);
-                        toast("Сохранено в блокнот");
+                        const notepadEl = document.getElementById('juvox-notepad');
+                        if (notepadEl) {
+                            notepadEl.value += `\n[${src.toUpperCase()}] ${item.title}\n${item.body}\n`;
+                            localStorage.setItem('juvox-notes-data', notepadEl.value);
+                            toast("Сохранено в блокнот");
+                        }
                     });
 
-                    webViewContainer.appendChild(card);
+                    if (webViewContainer) webViewContainer.appendChild(card);
                 }
             });
         });
 
-        if(foundResults === 0) {
+        if(foundResults === 0 && webViewContainer) {
             webViewContainer.innerHTML = `
                 <div class="feed-post-card" style="text-align:center; padding:30px;">
                     <h4>Ничего не найдено по запросу "${query}"</h4>
@@ -332,14 +350,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (logo) {
         logo.addEventListener('click', () => {
-            homeScreen.classList.remove('hidden');
-            webViewContainer.classList.add('hidden');
-            topSearchArea.style.display = 'none';
+            if (homeScreen) homeScreen.classList.remove('hidden');
+            if (webViewContainer) webViewContainer.classList.add('hidden');
+            if (topSearchArea) topSearchArea.style.display = 'none';
             if (searchBox) {
                 searchBox.classList.remove('minimized');
-                document.querySelector('.search-wrapper').insertBefore(searchBox, document.querySelector('.filter-accordion-container'));
+                const wrapper = document.querySelector('.search-wrapper');
+                if (wrapper) wrapper.insertBefore(searchBox, document.querySelector('.filter-accordion-container'));
             }
-            searchInput.value = "";
+            if (searchInput) searchInput.value = "";
         });
     }
 
@@ -356,27 +375,36 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
     }
 
-    document.getElementById('timer-start-btn').addEventListener('click', () => {
-        if (timerInterval) return;
-        timerInterval = setInterval(() => {
-            timerTime++;
-            timerOutput.textContent = formatTime(timerTime) + '.' + (timerTime%100).toString().padStart(2,'0');
-            if(widgetTimerView) widgetTimerView.textContent = formatTime(timerTime);
-        }, 10);
-    });
+    const tStart = document.getElementById('timer-start-btn');
+    if (tStart) {
+        tStart.addEventListener('click', () => {
+            if (timerInterval) return;
+            timerInterval = setInterval(() => {
+                timerTime++;
+                if (timerOutput) timerOutput.textContent = formatTime(timerTime) + '.' + (timerTime%100).toString().padStart(2,'0');
+                if (widgetTimerView) widgetTimerView.textContent = formatTime(timerTime);
+            }, 10);
+        });
+    }
 
-    document.getElementById('timer-stop-btn').addEventListener('click', () => {
-        clearInterval(timerInterval);
-        timerInterval = null;
-    });
+    const tStop = document.getElementById('timer-stop-btn');
+    if (tStop) {
+        tStop.addEventListener('click', () => {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        });
+    }
 
-    document.getElementById('timer-reset-btn').addEventListener('click', () => {
-        clearInterval(timerInterval);
-        timerInterval = null;
-        timerTime = 0;
-        timerOutput.textContent = "00:00.00";
-        if(widgetTimerView) widgetTimerView.textContent = "00:00";
-    });
+    const tReset = document.getElementById('timer-reset-btn');
+    if (tReset) {
+        tReset.addEventListener('click', () => {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            timerTime = 0;
+            if (timerOutput) timerOutput.textContent = "00:00.00";
+            if (widgetTimerView) widgetTimerView.textContent = "00:00";
+        });
+    }
 
     const notepad = document.getElementById('juvox-notepad');
     const notesSearchInput = document.getElementById('notes-search-input');
@@ -438,16 +466,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Боковое меню инструментов и раскрытие вкладок
+    // Вкладки инструментов
     document.querySelectorAll('.tool-acc-header').forEach(h => {
         h.addEventListener('click', () => h.parentElement.classList.toggle('open'));
     });
 
     const toolsMenuBtn = document.getElementById('tools-menu-btn');
     if (toolsMenuBtn) {
-        toolsMenuBtn.addEventListener('click', () => document.getElementById('floating-tools-panel').classList.toggle('tools-panel-hidden'));
+        toolsMenuBtn.addEventListener('click', () => {
+            const panel = document.getElementById('floating-tools-panel');
+            if (panel) panel.classList.toggle('tools-panel-hidden');
+        });
     }
-    document.getElementById('close-tools-btn').addEventListener('click', () => document.getElementById('floating-tools-panel').classList.add('tools-panel-hidden'));
+    
+    const closeToolsBtn = document.getElementById('close-tools-btn');
+    if (closeToolsBtn) {
+        closeToolsBtn.addEventListener('click', () => {
+            const panel = document.getElementById('floating-tools-panel');
+            if (panel) panel.classList.add('tools-panel-hidden');
+        });
+    }
 
     // Калькулятор
     const calcScreen = document.getElementById('calc-screen');
@@ -455,6 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.calc-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const val = btn.getAttribute('data-val');
+            if (!calcScreen) return;
             if (val === 'C') { calcExpr = ""; calcScreen.textContent = "0"; }
             else if (val === '=') {
                 try { calcExpr = eval(calcExpr).toString(); calcScreen.textContent = calcExpr; } 
@@ -466,20 +505,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // Пароли
     const passLenInput = document.getElementById('tool-pass-length');
     const passLenVal = document.getElementById('pass-len-val');
-    if(passLenInput) passLenInput.addEventListener('input', () => passLenVal.textContent = passLenInput.value);
+    if(passLenInput && passLenVal) passLenInput.addEventListener('input', () => passLenVal.textContent = passLenInput.value);
 
-    document.getElementById('tool-gen-pass-btn').addEventListener('click', () => {
-        const len = parseInt(passLenInput.value);
-        const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$";
-        let res = "";
-        for(let i=0; i<len; i++) res += chars.charAt(Math.floor(Math.random()*chars.length));
-        document.getElementById('tool-pass-output').value = res;
-    });
+    const genPassBtn = document.getElementById('tool-gen-pass-btn');
+    if (genPassBtn) {
+        genPassBtn.addEventListener('click', () => {
+            if (!passLenInput) return;
+            const len = parseInt(passLenInput.value);
+            const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$";
+            let res = "";
+            for(let i=0; i<len; i++) res += chars.charAt(Math.floor(Math.random()*chars.length));
+            const out = document.getElementById('tool-pass-output');
+            if (out) out.value = res;
+        });
+    }
 
     // Фильтр-аккордеон
     const filterToggleBtn = document.getElementById('filter-toggle-btn');
     const filterAccordionBody = document.getElementById('filter-accordion-body');
-    if (filterToggleBtn) {
+    if (filterToggleBtn && filterAccordionBody) {
         filterToggleBtn.addEventListener('click', () => filterAccordionBody.classList.toggle('filter-body-hidden'));
     }
 
@@ -493,13 +537,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const r = document.createElement('div');
             r.className = 'file-row';
             r.innerHTML = `<span class="h-click" style="cursor:pointer; color:var(--accent-color); font-weight:bold;">🔍 ${q}</span>`;
-            r.querySelector('.h-click').addEventListener('click', () => { searchInput.value = q; launchSearch(); });
+            r.querySelector('.h-click').addEventListener('click', () => { if (searchInput) searchInput.value = q; launchSearch(); });
             historyContainer.appendChild(r);
         });
     }
 
-    document.getElementById('clear-history-btn').addEventListener('click', () => {
-        localStorage.removeItem('juvox-history');
-        renderHistoryList();
-    });
+    const clearHistoryBtn = document.getElementById('clear-history-btn');
+    if (clearHistoryBtn) {
+        clearHistoryBtn.addEventListener('click', () => {
+            localStorage.removeItem('juvox-history');
+            renderHistoryList();
+        });
+    }
 });
