@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juvox — Ультимативный Персональный Хаб</title>
+    <title>Juvox — Персональный Рабочий Хаб</title>
     <link rel="stylesheet" href="style.css">
-    <script async id="google-analytics-script"></script>
 </head>
 <body>
 
@@ -24,7 +23,7 @@
                     <li class="nav-item active" data-target="home-screen">
                         <span class="nav-icon">🔍</span> <span class="nav-text">Поиск</span>
                     </li>
-                    <li class="nav-item" data-target="feed-screen">
+                    <li class="nav-item" data-target="feed-screen" id="nav-feed-trigger">
                         <span class="nav-icon">📰</span> <span class="nav-text">Лента</span>
                     </li>
                     <li class="nav-item" id="tools-menu-btn">
@@ -46,7 +45,7 @@
             </nav>
 
             <button id="split-screen-btn" class="sidebar-action-btn" title="Разделить экран">🌓 Сплит-режим</button>
-            <button id="theme-toggle" class="theme-btn">🌙</button>
+            <button id="theme-toggle" class="theme-btn" title="Сменить тему оформления">🌓 Смена темы</button>
         </aside>
 
         <div id="floating-tools-panel" class="tools-panel-hidden">
@@ -57,7 +56,7 @@
             <div class="tools-panel-content">
                 
                 <div class="tool-accordion">
-                    <div class="tool-acc-header">🧮 Модный Калькулятор <span class="acc-arrow">▼</span></div>
+                    <div class="tool-acc-header">🧮 Калькулятор <span class="acc-arrow">▼</span></div>
                     <div class="tool-acc-body">
                         <div class="calc-display" id="calc-screen">0</div>
                         <div class="calc-grid">
@@ -82,6 +81,36 @@
                 </div>
 
                 <div class="tool-accordion">
+                    <div class="tool-acc-header">⏱️ Секундомер <span class="acc-arrow">▼</span></div>
+                    <div class="tool-acc-body">
+                        <div class="timer-display" id="timer-output">00:00.00</div>
+                        <div style="display:flex; gap:5px;">
+                            <button id="timer-start-btn">Старт</button>
+                            <button id="timer-stop-btn">Пауза</button>
+                            <button id="timer-reset-btn">Сброс</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tool-accordion">
+                    <div class="tool-acc-header">🎵 Фонотека & Звуковой Микшер <span class="acc-arrow">▼</span></div>
+                    <div class="tool-acc-body">
+                        <label style="font-size:0.75rem; font-weight:bold; display:block; margin-bottom:5px;">Загрузить свой трек (.mp3, .wav):</label>
+                        <input type="file" id="music-uploader" accept="audio/*" style="font-size:0.8rem; margin-bottom:10px; width:100%;">
+                        <audio id="mixer-player" controls style="width:100%; margin-bottom:10px; display:none;"></audio>
+                        
+                        <div class="tool-field">
+                            <label>🌧️ Шум дождя (Синтез)</label>
+                            <input type="range" id="sound-rain" min="0" max="100" value="0" class="mixer-slider">
+                        </div>
+                        <div class="tool-field">
+                            <label>🌌 Космический эмбиент</label>
+                            <input type="range" id="sound-space" min="0" max="100" value="0" class="mixer-slider">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tool-accordion">
                     <div class="tool-acc-header">🔐 Генератор паролей <span class="acc-arrow">▼</span></div>
                     <div class="tool-acc-body">
                         <div class="tool-field">
@@ -94,60 +123,6 @@
                         </div>
                         <button id="tool-gen-pass-btn">Создать пароль</button>
                         <input type="text" id="tool-pass-output" readonly placeholder="Результат...">
-                    </div>
-                </div>
-
-                <div class="tool-accordion">
-                    <div class="tool-acc-header">⏱️ Секундомер & Таймер <span class="acc-arrow">▼</span></div>
-                    <div class="tool-acc-body">
-                        <div class="timer-display" id="timer-output">00:00.00</div>
-                        <div style="display:flex; gap:5px; margin-bottom:10px;">
-                            <button id="timer-start-btn">Старт</button>
-                            <button id="timer-stop-btn">Пауза</button>
-                            <button id="timer-reset-btn">Сброс</button>
-                        </div>
-                        <div class="tool-field">
-                            <label>Помодоро Таймер (минут):</label>
-                            <input type="number" id="pomodoro-duration" value="25" min="1" max="60" style="padding:5px; border-radius:4px; border:1px solid var(--border-color);">
-                            <button id="pomodoro-start-btn" style="margin-top:5px; background:#e11d48;">Запустить Фокус</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="tool-accordion">
-                    <div class="tool-acc-header">⚡ Интернетометр <span class="acc-arrow">▼</span></div>
-                    <div class="tool-acc-body" style="text-align:center;">
-                        <button id="speedtest-btn">Проверить скорость связи</button>
-                        <div id="speedtest-result" style="margin-top:10px; font-weight:bold; font-size:1.1rem; color:var(--accent-color);">-- Мбит/с</div>
-                    </div>
-                </div>
-
-                <div class="tool-accordion">
-                    <div class="tool-acc-header">🎵 ИИ Фонотека & Микшер <span class="acc-arrow">▼</span></div>
-                    <div class="tool-acc-body">
-                        <label style="font-size:0.75rem; font-weight:bold; display:block; margin-bottom:5px;">Загрузить свой трек (.mp3, .wav):</label>
-                        <input type="file" id="music-uploader" accept="audio/*" style="font-size:0.8rem; margin-bottom:10px; width:100%;">
-                        <audio id="mixer-player" controls style="width:100%; margin-bottom:10px; display:none;"></audio>
-                        
-                        <div class="tool-field">
-                            <label>Звуки дождя</label>
-                            <input type="range" min="0" max="100" value="0" class="mixer-slider">
-                        </div>
-                        <div class="tool-field">
-                            <label>Киберпанк эмбиент</label>
-                            <input type="range" min="0" max="100" value="0" class="mixer-slider">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="tool-accordion">
-                    <div class="tool-acc-header">⌨️ Горячие Клавиши App <span class="acc-arrow">▼</span></div>
-                    <div class="tool-acc-body" style="font-size:0.8rem; line-height:1.5;">
-                        <div style="color: #f59e0b; font-weight:bold; margin-bottom:5px;">⚠️ Доступно только в Juvox Desktop:</div>
-                        • <code>Ctrl + K</code> — Вызов Смарт-строки команд<br>
-                        • <code>Alt + N</code> — Моментальная заметка<br>
-                        • <code>Alt + S</code> — Переключить сплит-экран<br>
-                        • <code>Ctrl + Shift + D</code> — Очистить буфер
                     </div>
                 </div>
 
@@ -168,32 +143,31 @@
 
                     <div class="filter-accordion-container">
                         <div class="filter-acc-header" id="filter-toggle-btn">
-                            <span>⚙️ Настройка источников и лимитов (SEO-Щит Активен)</span>
+                            <span>⚙️ Настройка источников поиска</span>
                             <span class="filter-arrow">▼</span>
                         </div>
                         
                         <div class="filter-acc-body filter-body-hidden" id="filter-accordion-body">
-                            <p class="filter-help-text">Выберите сайты и укажите лимит ответов от каждого сообщества:</p>
                             <div class="filter-grid">
-                                <div class="filter-item"><label><input type="checkbox" value="wikipedia.org" checked> 🌐 Wikipedia</label><input type="number" class="res-count" min="1" max="5" value="1"></div>
-                                <div class="filter-item"><label><input type="checkbox" value="reddit.com" checked> 💬 Reddit</label><input type="number" class="res-count" min="1" max="5" value="1"></div>
-                                <div class="filter-item"><label><input type="checkbox" value="habr.com" checked> 💻 Habr</label><input type="number" class="res-count" min="1" max="5" value="1"></div>
-                                <div class="filter-item"><label><input type="checkbox" value="stackoverflow.com" checked> 🛠️ StackOverflow</label><input type="number" class="res-count" min="1" max="5" value="1"></div>
-                                <div class="filter-item"><label><input type="checkbox" value="github.com"> 🐙 GitHub</label><input type="number" class="res-count" min="1" max="5" value="1"></div>
+                                <div class="filter-item"><label><input type="checkbox" value="wikipedia.org" checked> 🌐 Wikipedia</label><input type="number" class="res-count" min="1" max="5" value="2"></div>
+                                <div class="filter-item"><label><input type="checkbox" value="reddit.com" checked> 💬 Reddit</label><input type="number" class="res-count" min="1" max="5" value="2"></div>
+                                <div class="filter-item"><label><input type="checkbox" value="habr.com" checked> 💻 Habr</label><input type="number" class="res-count" min="1" max="5" value="2"></div>
+                                <div class="filter-item"><label><input type="checkbox" value="stackoverflow.com" checked> 🛠️ StackOverflow</label><input type="number" class="res-count" min="1" max="5" value="2"></div>
+                                <div class="filter-item"><label><input type="checkbox" value="github.com"> 🐙 GitHub</label><input type="number" class="res-count" min="1" max="5" value="2"></div>
                             </div>
                         </div>
                     </div>
 
                     <div class="widget-constructor-area">
-                        <h3>🎨 Мои Информационные Виджеты</h3>
+                        <h3>🎨 Информационные виджеты</h3>
                         <div class="widget-grid" id="widget-drop-zone">
-                            <div class="juvox-widget" data-size="small">
-                                <h4>⏱️ Таймер</h4>
-                                <div id="widget-timer-view" style="font-size:1.2rem; font-weight:bold; margin-top:5px;">00:00</div>
+                            <div class="juvox-widget">
+                                <h4>⏱️ Секундомер</h4>
+                                <div id="widget-timer-view" style="font-size:1.6rem; font-weight:bold; margin-top:8px; color:var(--accent-color);">00:00</div>
                             </div>
-                            <div class="juvox-widget" data-size="small">
-                                <h4>📈 Тренды Сети</h4>
-                                <div style="font-size:0.8rem; opacity:0.7; margin-top:5px;">Core v2.2 Стабилен</div>
+                            <div class="juvox-widget">
+                                <h4>📊 Статус Системы</h4>
+                                <div style="font-size:0.9rem; opacity:0.8; margin-top:8px; color:#10b981; font-weight:bold;">● Juvox Core v2.5 Online</div>
                             </div>
                         </div>
                     </div>
@@ -202,21 +176,14 @@
 
             <div id="web-view-container" class="view-section hidden"></div>
 
-            <div id="reader-mode-overlay" class="reader-hidden">
-                <div class="reader-container">
-                    <button id="close-reader-btn">✕ Выйти из режима чтения</button>
-                    <h1 id="reader-title"></h1>
-                    <div id="reader-content"></div>
-                </div>
-            </div>
-
             <section id="feed-screen" class="view-section hidden">
                 <div class="content-card-ui">
                     <div class="feed-header-tabs">
-                        <button class="feed-tab-btn active" id="feed-all-btn">🌐 Все публикации</button>
-                        <button class="feed-tab-btn" id="feed-fav-btn">❤️ Моё Избранное</button>
+                        <button class="feed-tab-btn active" id="feed-all-btn">🌐 Лента</button>
+                        <button class="feed-tab-btn" id="feed-fav-btn">❤️ Избранное</button>
                     </div>
                     <div id="feed-cards-container" style="margin-top:20px;"></div>
+                    <div id="feed-loader-trigger" style="height:20px; text-align:center; font-weight:bold; margin-top:15px; opacity:0.6;">Загрузка публикаций...</div>
                 </div>
             </section>
 
@@ -226,18 +193,18 @@
                         <h2>📜 История запросов</h2>
                         <button id="clear-history-btn" class="danger-btn">Очистить лог</button>
                     </div>
-                    <div id="history-list-container"></div>
+                    <div id="history-list-container" style="margin-top:15px;"></div>
                 </div>
             </section>
 
             <section id="notes-screen" class="view-section hidden">
                 <div class="content-card-ui">
-                    <h2>📝 Автономный блокнот Juvox</h2>
+                    <h2>📝 Автономный блокнот</h2>
                     <div class="notes-search-wrapper" style="margin: 15px 0;">
-                        <input type="text" id="notes-search-input" placeholder="🔍 Быстрый поиск по заголовкам и тексту заметок..." style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-main); color:var(--text-main);">
+                        <input type="text" id="notes-search-input" placeholder="🔍 Быстрый поиск внутри ваших заметок...">
                     </div>
                     <div class="notepad-container">
-                        <textarea id="juvox-notepad" placeholder="Сохраняйте данные из поиска или пишите здесь..."></textarea>
+                        <textarea id="juvox-notepad" placeholder="Сохраняйте данные из поиска или пишите здесь личные заметки..."></textarea>
                     </div>
                 </div>
             </section>
@@ -245,9 +212,9 @@
             <section id="dropzone-screen" class="view-section hidden">
                 <div class="content-card-ui">
                     <h2>📥 Локальный Склад файлов (Drop Zone)</h2>
-                    <p class="subtitle">Перетащите файлы с ПК сюда, чтобы хранить их под рукой во время сессии.</p>
+                    <p style="color:var(--text-muted); margin-bottom:15px; font-size:0.9rem;">Перетащите файлы с вашего ПК, чтобы временно хранить их в сессии браузера.</p>
                     <div id="drop-zone-area" class="drop-zone-box">
-                        <p>Перетащите файлы `.txt`, `.png`, `.jpg` сюда или нажмите для выбора</p>
+                        <p>Перетащите файлы сюда или нажмите для выбора</p>
                         <input type="file" id="drop-zone-file-input" multiple style="display:none;">
                     </div>
                     <div id="drop-zone-list" style="margin-top:20px;"></div>
@@ -257,12 +224,10 @@
             <section id="settings-screen" class="view-section hidden">
                 <div class="content-card-ui">
                     <h2>⚙️ Настройки Системы</h2>
-                    
-                    <div class="settings-block">
+                    <div class="settings-block" style="margin-top:15px;">
                         <div class="setting-item-row">
                             <div class="setting-info">
-                                <span class="setting-title">Визуальная Тема</span>
-                                <span class="setting-desc">Выбор цветового пространства и спецэффектов.</span>
+                                <span class="setting-title">Выбор темы оформления</span>
                             </div>
                             <select id="theme-selector" class="juvox-select">
                                 <option value="light">Дневной свет (Light)</option>
@@ -271,28 +236,12 @@
                                 <option value="glassmorphic">Матовое стекло (Glassmorphic)</option>
                             </select>
                         </div>
-                        <hr class="settings-divider">
+                        <hr class="settings-divider" style="margin:15px 0; border:none; border-top:1px solid var(--border-color);">
                         <div class="setting-item-row">
                             <div class="setting-info">
-                                <span class="setting-title">Кастомные обои (.jpg, .png, .webp)</span>
-                                <span class="setting-desc">Загрузите свое изображение для заднего плана хаба.</span>
+                                <span class="setting-title">Кастомные фоновые обои</span>
                             </div>
                             <input type="file" id="bg-uploader" accept="image/*">
-                        </div>
-                        <hr class="settings-divider">
-                        <div class="setting-item-row">
-                            <div class="setting-info">
-                                <span class="setting-title">Google Analytics ID</span>
-                                <span class="setting-desc">Вставьте ваш 'G-XXXXXXXXXX' токен для отслеживания внешней аналитики.</span>
-                            </div>
-                            <input type="text" id="ga-token-input" class="juvox-select" placeholder="G-XXXXXXXXXX" style="width:200px;">
-                        </div>
-                        <hr class="settings-divider">
-                        <div class="setting-item-row">
-                            <div class="setting-info">
-                                <span class="setting-title">Локальное логгирование</span>
-                            </div>
-                            <button id="btn-toggle-history-save" class="status-btn">Запись: ВКЛ</button>
                         </div>
                     </div>
                 </div>
@@ -301,23 +250,18 @@
 
         <aside class="split-sidebar hidden" id="right-split-panel">
             <div class="split-panel-header">
-                <h3>📋 Быстрый Блокнот</h3>
+                <h3>📋 Быстрый блокнот</h3>
                 <button id="close-split-btn">✕</button>
             </div>
-            <textarea id="split-notepad-mirror" placeholder="Зеркало ваших заметок для удобной работы в сплит-режиме..."></textarea>
+            <textarea id="split-notepad-mirror" placeholder="Зеркало ваших заметок..."></textarea>
         </aside>
 
         <aside class="download-sidebar" id="right-download-panel">
             <div class="download-box-animated">
-                <div class="dl-badge">PRO v2.2</div>
+                <div class="dl-badge">PRO v2.5</div>
                 <h3>Браузер Juvox</h3>
-                <p>Изоляция оперативной памяти, встроенный обход лимитов CORS и кастомные хоткеи.</p>
-                <a href="#" class="dl-button" onclick="toast('Запуск сборки десктопного клиента...'); return false;">Скачать на ПК</a>
-            </div>
-            <div class="health-reminder-widget" style="margin-top:20px; padding:15px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-card); font-size:0.8rem; text-align:center;">
-                <span style="font-size:1.2rem;">🧘</span>
-                <div style="font-weight:bold; margin-top:5px;">Здоровье: Смарт-Контроль</div>
-                <div style="color:var(--text-muted); margin-top:3px;" id="health-timer-text">До глотка воды: 40 мин</div>
+                <p>Изоляция ОЗУ, встроенный обход лимитов CORS запросов и кастомные глобальные хоткеи.</p>
+                <a href="#" class="dl-button" onclick="toast('Запуск десктопного сборщика...'); return false;">Скачать клиент</a>
             </div>
         </aside>
 
