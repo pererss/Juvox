@@ -1,5 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Находим все элементы интерфейса Juvox
+    // Элементы навигации и разметки
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const navItems = document.querySelectorAll('.nav-item');
+    const viewSections = document.querySelectorAll('.view-section');
+    
+    // Поисковые элементы
     const themeToggle = document.getElementById('theme-toggle');
     const searchInput = document.getElementById('search-input');
     const searchBtn = document.getElementById('search-btn');
@@ -7,28 +13,72 @@ document.addEventListener('DOMContentLoaded', () => {
     const webViewContainer = document.getElementById('web-view-container');
     const topSearchArea = document.getElementById('top-search-area');
     const searchBox = document.querySelector('.search-box');
-    const tabsContainer = document.getElementById('tabs-container');
     const suggestionsBox = document.getElementById('suggestions-box');
     const logo = document.querySelector('.logo');
 
-    // Переменная для хранения копии последнего поиска
-    let lastSearchResultsHTML = ""; 
+    // Элементы Истории, Настроек и Блокнота
+    const historyListContainer = document.getElementById('history-list-container');
+    const clearHistoryBtn = document.getElementById('clear-history-btn');
+    const juvoxNotepad = document.getElementById('juvox-notepad');
+    const proxySelect = document.getElementById('setting-proxy-select');
+    const toggleHistorySaveBtn = document.getElementById('btn-toggle-history-save');
 
     // ==========================================
-    // 1. НАСТРОЙКИ СИСТЕМЫ И ИНИЦИАЛИЗАЦИЯ ТЕМЫ
+    // 1. СИСТЕМА ПЕРЕКЛЮЧЕНИЯ И ВЫДВИЖЕНИЯ ВКЛАДОК
+    // ==========================================
+    
+    // Сжатие/расширение боковой панели по клику на ☰
+    if (sidebarToggle && sidebar) {
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+        });
+    }
+
+    // Роутер экранов (Переключает вкладки как в полноценном приложении)
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            navItems.forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+
+            const targetId = item.getAttribute('data-target');
+            
+            // Скрываем абсолютно все экраны
+            viewSections.forEach(section => section.classList.add('hidden'));
+            if (webViewContainer) webViewContainer.classList.add('hidden');
+
+            // Активируем нужный экран
+            if (targetId === 'home-screen') {
+                // Если поисковая строка уже свернута наверх, показываем контейнер выдачи
+                if (searchBox && searchBox.classList.contains('minimized')) {
+                    if (webViewContainer) webViewContainer.classList.remove('hidden');
+                } else {
+                    if (homeScreen) homeScreen.classList.remove('hidden');
+                }
+            } else {
+                const targetSection = document.getElementById(targetId);
+                if (targetSection) targetSection.classList.remove('hidden');
+                
+                // Специфическая логика загрузки разделов
+                if (targetId === 'history-screen') renderHistoryList();
+            }
+        });
+    });
+
+    // ==========================================
+    // 2. ИНИЦИАЛИЗАЦИЯ НАСТРОЕК И ТЕМЫ JUVOX
     // ==========================================
     let config = {
         theme: localStorage.getItem('juvox-theme') || 'light',
-        bgStyle: localStorage.getItem('juvox-bg') || 'default',
-        saveHistory: localStorage.getItem('juvox-save-history') !== 'false'
+        saveHistory: localStorage.getItem('juvox-save-history') !== 'false',
+        preferredProxy: localStorage.getItem('juvox-proxy') || 'allorigins'
     };
 
-    // Применяем сохраненную тему оформления
     document.documentElement.setAttribute('data-theme', config.theme);
-    document.body.setAttribute('data-bg', config.bgStyle);
     if (themeToggle) themeToggle.textContent = config.theme === 'dark' ? '☀️' : '🌙';
+    if (proxySelect) proxySelect.value = config.preferredProxy;
+    updateHistoryBtnUI();
 
-    // Клик по кнопке смены темы
+    // Смена темы оформления
     if (themeToggle) {
         themeToggle.addEventListener('click', () => {
             config.theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
@@ -38,20 +88,109 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Настройки прокси-сервера
+    if (proxySelect) {
+        proxySelect.addEventListener('change', () => {
+            config.preferredProxy = proxySelect.value;
+            localStorage.setItem('juvox-proxy', config.preferredProxy);
+        });
+    }
+
+    // Переключатель записи истории
+    if (toggleHistorySaveBtn) {
+        toggleHistorySaveBtn.addEventListener('click', () => {
+            config.saveHistory = !config.saveHistory;
+            localStorage.setItem('juvox-save-history', config.saveHistory);
+            updateHistoryBtnUI();
+        });
+    }
+
+    function updateHistoryBtnUI() {
+        if (toggleHistorySaveBtn) {
+            toggleHistorySaveBtn.textContent = config.saveHistory ? "Запись истории: ВКЛ" : "Запись истории: ВЫКЛ";
+            toggleHistorySaveBtn.style.background = config.saveHistory ? "#10b981" : "#ef4444";
+            toggleHistorySaveBtn.style.color = "#fff";
+        }
+    }
+
     // ==========================================
-    // 2. СИСТЕМА ЛОКАЛЬНОЙ ИСТОРИИ ПОИСКА
+    // 3. ПОЛЕЗНЫЙ МОДУЛЬ: АВТО-БЛОКНОТ (JUVOX NOTES)
+    // ==========================================
+    if (juvoxNotepad) {
+        // Загружаем старый текст черновика
+        juvoxNotepad.value = localStorage.getItem('juvox-notes-data') || '';
+        // Сохраняем каждое нажатие клавиши налету
+        juvoxNotepad.addEventListener('input', () => {
+            localStorage.setItem('juvox-notes-data', juvoxNotepad.value);
+        });
+    }
+
+    // ==========================================
+    // 4. ИСТОРИЯ ПОИСКА (ФУНКЦИОНАЛ)
     // ==========================================
     function saveToHistory(query) {
         if (!config.saveHistory) return;
         let history = JSON.parse(localStorage.getItem('juvox-history')) || [];
         history = history.filter(item => item.toLowerCase() !== query.toLowerCase());
         history.unshift(query);
-        if (history.length > 20) history.pop(); // Храним только последние 20 запросов
+        if (history.length > 30) history.pop();
         localStorage.setItem('juvox-history', JSON.stringify(history));
     }
 
+    function renderHistoryList() {
+        if (!historyListContainer) return;
+        const history = JSON.parse(localStorage.getItem('juvox-history')) || [];
+        
+        if (history.length === 0) {
+            historyListContainer.innerHTML = `<p style="opacity:0.6; padding: 20px 0;">История поисковых запросов пуста.</p>`;
+            return;
+        }
+
+        historyListContainer.innerHTML = '';
+        history.forEach(query => {
+            const row = document.createElement('div');
+            row.style.display = 'flex';
+            row.style.justifyContent = 'space-between';
+            row.style.padding = '12px';
+            row.style.borderBottom = '1px solid var(--border-color, #e5e7eb)';
+            row.style.alignItems = 'center';
+
+            row.innerHTML = `
+                <span class="hist-text" style="cursor:pointer; font-weight:500; color: var(--accent-color, #3b82f6);">${query}</span>
+                <button class="delete-single-hist" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:1.1rem;">×</button>
+            `;
+
+            // Повторный поиск по клику на элемент истории
+            row.querySelector('.hist-text').addEventListener('click', () => {
+                searchInput.value = query;
+                const searchTabItem = Array.from(navItems).find(i => i.getAttribute('data-target') === 'home-screen');
+                if (searchTabItem) searchTabItem.click();
+                launchSearch();
+            });
+
+            // Удаление одного конкретного элемента
+            row.querySelector('.delete-single-hist').addEventListener('click', () => {
+                let currentHistory = JSON.parse(localStorage.getItem('juvox-history')) || [];
+                currentHistory = currentHistory.filter(h => h !== query);
+                localStorage.setItem('juvox-history', JSON.stringify(currentHistory));
+                renderHistoryList();
+            });
+
+            historyListContainer.appendChild(row);
+        });
+    }
+
+    if (clearHistoryBtn) {
+        clearHistoryBtn.addEventListener('click', () => {
+            if (confirm("Вы действительно хотите полностью стереть историю поиска Juvox?")) {
+                localStorage.removeItem('juvox-history');
+                renderHistoryList();
+            }
+        });
+    }
+
     // ==========================================
-    // 3. ЖИВЫЕ ПОДСКАЗКИ ПРИ ВВОДЕ ТЕКСТА
+    // 5. ЖИВЫЕ ПОДСКАЗКИ
     // ==========================================
     if (searchInput && suggestionsBox) {
         searchInput.addEventListener('input', () => {
@@ -61,17 +200,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Запрашиваем быстрые подсказки через безопасный прокси
-            fetch(`https://corsproxy.io/?${encodeURIComponent(`https://suggestqueries.google.com/complete/search?client=chrome&q=${query}`)}`)
+            fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://suggestqueries.google.com/complete/search?client=chrome&q=${query}`)}`)
                 .then(res => res.json())
                 .then(data => {
                     const suggestions = data[1];
                     if (!suggestions || suggestions.length === 0) return;
-                    
                     suggestionsBox.innerHTML = '';
                     suggestionsBox.classList.remove('suggestions-hidden');
 
-                    // Показываем первые 5 подсказок
                     suggestions.slice(0, 5).forEach(text => {
                         const div = document.createElement('div');
                         div.className = 'suggestion-item';
@@ -82,85 +218,61 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                         suggestionsBox.appendChild(div);
                     });
-                })
-                .catch(() => {});
-        });
-
-        // Закрываем подсказки, если кликнули мимо поисковой строки
-        document.addEventListener('click', (e) => {
-            if (e.target !== searchInput) {
-                suggestionsBox.classList.add('suggestions-hidden');
-            }
+                }).catch(() => {});
         });
     }
 
     // ==========================================
-    // 4. УМНЫЙ ПОИСКОВОЙ ДВИЖОК JUVOX CORE
+    // 6. НЕУБИВАЕМЫЙ ДВИЖОК ПОИСКА JUVOX CORE
     // ==========================================
     async function launchSearch() {
         const query = searchInput.value.trim();
         if (!query) return;
 
-        // Прячем выпадающие подсказки и сохраняем запрос
         if (suggestionsBox) suggestionsBox.classList.add('suggestions-hidden');
         saveToHistory(query);
 
-        // Переключаем экраны (прячем центр, активируем зону выдачи)
         if (homeScreen) homeScreen.classList.add('hidden');
         if (webViewContainer) webViewContainer.classList.remove('hidden');
         
-        // Переносим поисковую строку наверх страницы (минимизация)
         if (topSearchArea && searchBox) {
             topSearchArea.style.display = 'block';
             searchBox.classList.add('minimized');
             topSearchArea.appendChild(searchBox);
         }
 
-        // Создаем красивую вкладку с иконкой лупы сверху
-        document.querySelectorAll('.tab-item').forEach(t => { if (t.textContent.includes('🔍')) t.remove(); });
-        const newTab = document.createElement('li');
-        newTab.className = 'tab-item active';
-        newTab.textContent = `🔍 ${query.substring(0, 8)}...`;
-        if (tabsContainer) tabsContainer.insertBefore(newTab, document.getElementById('add-tab'));
-
-        // Включаем фирменный загрузчик Juvox
         webViewContainer.innerHTML = `
-            <div class="loading-status" style="display: flex; flex-direction: column; gap: 12px; align-items: center; padding: 50px; color: var(--text-color, #000);">
+            <div class="loading-status" style="display: flex; flex-direction: column; gap: 12px; align-items: center; padding: 50px;">
                 <div style="font-size: 2.5rem; animation: spin 1s linear infinite;">🛸</div>
-                <div style="font-weight: bold; letter-spacing: 1px;">JUVOX ИЩЕТ ОТВЕТЫ...</div>
+                <div style="font-weight: bold; letter-spacing: 1px;">ПЕРЕНАПРАВЛЕНИЕ ПОТОКОВ JUVOX...</div>
             </div>
         `;
 
-        // Создаем общий контейнер для нашей кастомной выдачи
         const resultsWrapper = document.createElement('div');
         resultsWrapper.className = 'search-results-page';
         resultsWrapper.style.padding = '20px';
         resultsWrapper.style.maxWidth = '800px';
         resultsWrapper.style.margin = '0 auto';
 
-        // --- МОДУЛЬ 1: ВСТРОЕННЫЙ КАЛЬКУЛЯТОР ---
+        // --- МОДУЛЬ 1: КАЛЬКУЛЯТОР ---
         if (/^[0-9+\-*/().\s]+$/.test(query) && /[+\-*/]/.test(query)) {
             try {
                 const mathResult = Function(`"use strict"; return (${query})`)();
                 const calcWidget = document.createElement('div');
-                calcWidget.className = 'juvox-widget';
                 calcWidget.style.background = 'linear-gradient(135deg, #4f46e5, #3b82f6)';
                 calcWidget.style.color = '#fff';
-                calcWidget.style.padding = '20px';
-                calcWidget.style.borderRadius = '12px';
-                calcWidget.style.marginBottom = '25px';
-                calcWidget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
+                calcWidget.style.padding = '15px 20px';
+                calcWidget.style.borderRadius = '10px';
+                calcWidget.style.marginBottom = '20px';
                 calcWidget.innerHTML = `
-                    <div style="font-size: 0.85rem; opacity: 0.8; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Математический модуль Juvox</div>
-                    <div style="font-size: 1.8rem; font-weight: bold; margin-top: 5px;">${query} = ${mathResult}</div>
+                    <div style="font-size: 0.8rem; opacity: 0.8; font-weight: bold;">Вычисление Juvox Engine</div>
+                    <div style="font-size: 1.6rem; font-weight: bold;">${query} = ${mathResult}</div>
                 `;
                 resultsWrapper.appendChild(calcWidget);
-            } catch (e) {
-                // Игнорируем ошибку, если это был обычный текст с дефисом
-            }
+            } catch (e) {}
         }
 
-        // --- МОДУЛЬ 2: ИНТЕЛЛЕКТУАЛЬНАЯ СПРАВКА (ВИКИПЕДИЯ API) ---
+        // --- МОДУЛЬ 2: ОТКРЫТАЯ СПРАВКА (ВИКИПЕДИЯ API) ---
         try {
             const wikiRes = await fetch(`https://ru.wikipedia.org/w/api.php?action=query&format=json&prop=extracts|pageimages&exintro&explaintext&redirects=1&pithumbsize=400&origin=*&titles=${encodeURIComponent(query)}`);
             const wikiData = await wikiRes.json();
@@ -169,136 +281,142 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (pageId !== "-1") {
                 const page = pages[pageId];
-                const text = page.extract ? page.extract.substring(0, 350) + '...' : '';
+                const text = page.extract ? page.extract.substring(0, 320) + '...' : '';
                 const imgUrl = page.thumbnail ? page.thumbnail.source : '';
 
                 if (text) {
                     const wikiWidget = document.createElement('div');
-                    wikiWidget.className = 'juvox-wiki-card';
                     wikiWidget.style.background = 'var(--card-bg, #f3f4f6)';
                     wikiWidget.style.border = '1px solid var(--border-color, #e5e7eb)';
-                    wikiWidget.style.padding = '20px';
-                    wikiWidget.style.borderRadius = '12px';
-                    wikiWidget.style.marginBottom = '25px';
+                    wikiWidget.style.padding = '15px';
+                    wikiWidget.style.borderRadius = '10px';
+                    wikiWidget.style.marginBottom = '20px';
                     wikiWidget.style.display = 'flex';
-                    wikiWidget.style.gap = '20px';
+                    wikiWidget.style.gap = '15px';
 
                     wikiWidget.innerHTML = `
-                        ${imgUrl ? `<img src="${imgUrl}" style="width: 110px; height: 110px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">` : ''}
+                        ${imgUrl ? `<img src="${imgUrl}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 6px; flex-shrink: 0;">` : ''}
                         <div>
-                            <div style="font-size: 0.85rem; color: #10b981; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Справка Juvox AI</div>
-                            <h3 style="margin: 5px 0; font-size: 1.4rem; color: var(--text-color, #000);">${page.title}</h3>
-                            <p style="font-size: 0.95rem; line-height: 1.5; margin: 5px 0; color: var(--text-muted, #4b5563);">${text}</p>
-                            <a href="https://ru.wikipedia.org/?curid=${pageId}" target="_blank" style="color: #3b82f6; font-size: 0.9rem; text-decoration: none; font-weight: bold;">Читать полностью на Википедии →</a>
+                            <div style="font-size: 0.8rem; color: #10b981; font-weight: bold;">СПРАВКА JUVOX</div>
+                            <h3 style="margin: 3px 0; font-size: 1.25rem;">${page.title}</h3>
+                            <p style="font-size: 0.9rem; margin: 5px 0; color: var(--text-muted, #4b5563);">${text}</p>
+                            <a href="https://ru.wikipedia.org/?curid=${pageId}" target="_blank" style="color: #3b82f6; font-size: 0.85rem; font-weight: bold; text-decoration:none;">Открыть статью в Википедии →</a>
                         </div>
                     `;
                     resultsWrapper.appendChild(wikiWidget);
                 }
             }
-        } catch (err) {
-            console.log("Модуль знаний временно недоступен");
-        }
+        } catch (err) {}
 
-        // --- МОДУЛЬ 3: СБОР ОРГАНИЧЕСКИХ ССЫЛОК (ПАРСИНГ DUCKDUCKGO HTML) ---
-        try {
-            const targetUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
-            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
-            
-            const response = await fetch(proxyUrl);
-            if (!response.ok) throw new Error();
-            
-            const htmlText = await response.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(htmlText, 'text/html');
-            const resultElements = doc.querySelectorAll('.result');
+        // --- МОДУЛЬ 3: ОРГАНИЧЕСКИЙ ГЛОБАЛЬНЫЙ ПОИСК С РОТАЦИЕЙ ПРОКСИ ---
+        let searchSuccess = false;
+        
+        // Массив прокси-серверов для поочередного перебора в случае падения
+        const proxyUrls = config.preferredProxy === 'allorigins' 
+            ? [`https://api.allorigins.win/raw?url=`, `https://corsproxy.io/?`]
+            : [`https://corsproxy.io/?`, `https://api.allorigins.win/raw?url=`];
 
-            if (resultElements.length > 0) {
-                // Добавляем красивую текстовую черту разделения
-                const searchHeader = document.createElement('h4');
-                searchHeader.textContent = "Результаты глобального поиска:";
-                searchHeader.style.margin = '20px 0 15px 0';
-                searchHeader.style.opacity = '0.6';
-                searchHeader.style.fontSize = '0.9rem';
-                resultsWrapper.appendChild(searchHeader);
+        for (let proxy of proxyUrls) {
+            if (searchSuccess) break;
+            try {
+                const targetUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+                const response = await fetch(`${proxy}${encodeURIComponent(targetUrl)}`);
+                if (!response.ok) continue;
 
-                // Рендерим первые 9 чистых результатов без рекламы
-                resultElements.forEach((el, index) => {
-                    if (index > 8) return;
-                    const titleEl = el.querySelector('.result__title a');
-                    const snippetEl = el.querySelector('.result__snippet');
+                const htmlText = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlText, 'text/html');
+                const resultElements = doc.querySelectorAll('.result');
 
-                    if (titleEl && snippetEl) {
-                        let rawUrl = titleEl.getAttribute('href');
-                        
-                        // Очищаем редиректы внутри ссылок, делая их прямыми
-                        if (rawUrl.includes('uddg=')) {
-                            const parts = rawUrl.split('uddg=');
-                            if (parts[1]) rawUrl = decodeURIComponent(parts[1].split('&')[0]);
+                if (resultElements.length > 0) {
+                    const searchHeader = document.createElement('h4');
+                    searchHeader.textContent = "Найденные ссылки в глобальной сети:";
+                    searchHeader.style.margin = '15px 0 10px 0';
+                    searchHeader.style.opacity = '0.6';
+                    resultsWrapper.appendChild(searchHeader);
+
+                    resultElements.forEach((el, index) => {
+                        if (index > 7) return;
+                        const titleEl = el.querySelector('.result__title a');
+                        const snippetEl = el.querySelector('.result__snippet');
+
+                        if (titleEl && snippetEl) {
+                            let rawUrl = titleEl.getAttribute('href');
+                            if (rawUrl.includes('uddg=')) {
+                                const parts = rawUrl.split('uddg=');
+                                if (parts[1]) rawUrl = decodeURIComponent(parts[1].split('&')[0]);
+                            }
+
+                            const card = document.createElement('div');
+                            card.className = 'result-card';
+                            card.style.marginBottom = '15px';
+                            card.style.padding = '15px';
+                            card.style.background = 'var(--card-bg, #ffffff)';
+                            card.style.borderRadius = '8px';
+                            card.style.border = '1px solid var(--border-color, #e5e7eb)';
+                            card.innerHTML = `
+                                <div style="font-size: 0.75rem; color: #10b981; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${rawUrl}</div>
+                                <a href="${rawUrl}" target="_blank" style="font-size: 1.15rem; color: #2563eb; font-weight: bold; text-decoration: none;">${titleEl.textContent.trim()}</a>
+                                <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: var(--text-muted, #4b5563); line-height: 1.4;">${snippetEl.textContent.trim()}</p>
+                            `;
+                            resultsWrapper.appendChild(card);
                         }
-
-                        const card = document.createElement('div');
-                        card.className = 'result-card';
-                        card.style.marginBottom = '20px';
-                        card.style.padding = '15px';
-                        card.style.background = 'var(--card-bg, #ffffff)';
-                        card.style.borderRadius = '8px';
-                        card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.03)';
-                        card.innerHTML = `
-                            <div class="result-url" style="font-size: 0.8rem; color: #10b981; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${rawUrl}</div>
-                            <a href="${rawUrl}" target="_blank" class="result-title" style="font-size: 1.2rem; color: #2563eb; font-weight: 600; text-decoration: none;">${titleEl.textContent.trim()}</a>
-                            <p class="result-snippet" style="margin: 6px 0 0 0; font-size: 0.95rem; color: var(--text-muted, #4b5563); line-height: 1.4;">${snippetEl.textContent.trim()}</p>
-                        `;
-                        resultsWrapper.appendChild(card);
-                    }
-                });
-            } else {
-                appendNoResultsMessage(resultsWrapper);
+                    });
+                    searchSuccess = true;
+                }
+            } catch (e) {
+                console.log("Текущий шлюз прокси занят, переключаюсь...");
             }
-        } catch (error) {
-            appendNoResultsMessage(resultsWrapper);
         }
 
-        // Очищаем экран загрузки и вставляем готовую страницу
+        // --- МОДУЛЬ ПРЕДОТВРАЩЕНИЯ ОШИБОК: УМНЫЙ ХАБ-РЕДИРЕКТОР ---
+        // Если парсинг сети полностью заблокирован внешними серверами, строим умный шлюз-клиент
+        if (!searchSuccess) {
+            const fallbackWidget = document.createElement('div');
+            fallbackWidget.style.marginTop = '20px';
+            fallbackWidget.style.padding = '20px';
+            fallbackWidget.style.background = 'var(--card-bg, #fef3c7)';
+            fallbackWidget.style.border = '1px solid #f59e0b';
+            fallbackWidget.style.borderRadius = '10px';
+            fallbackWidget.innerHTML = `
+                <h4 style="margin:0 0 5px 0; color:#b45309;">🔒 Внешние шлюзы перегружены</h4>
+                <p style="font-size:0.9rem; margin:0 0 15px 0; opacity:0.8;">Прямой парсинг заблокирован системами защиты. Чтобы вы мгновенно получили информацию по запросу <strong>"${query}"</strong>, Juvox подготовил шлюзы прямого защищенного перехода:</p>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <a href="https://www.google.com/search?q=${encodeURIComponent(query)}" target="_blank" style="background:#b45309; color:#fff; text-decoration:none; padding:8px 15px; border-radius:5px; font-weight:bold; font-size:0.85rem;">Искать в Google ↗</a>
+                    <a href="https://yandex.ru/search/?text=${encodeURIComponent(query)}" target="_blank" style="background:#3b82f6; color:#fff; text-decoration:none; padding:8px 15px; border-radius:5px; font-weight:bold; font-size:0.85rem;">Искать в Яндекс ↗</a>
+                    <a href="https://search.brave.com/search?q=${encodeURIComponent(query)}" target="_blank" style="background:#10b981; color:#fff; text-decoration:none; padding:8px 15px; border-radius:5px; font-weight:bold; font-size:0.85rem;">Искать в Brave ↗</a>
+                </div>
+            `;
+            resultsWrapper.appendChild(fallbackWidget);
+        }
+
         webViewContainer.innerHTML = '';
         webViewContainer.appendChild(resultsWrapper);
-        
-        // Сохраняем слепок кода для работы логики переключения
-        lastSearchResultsHTML = webViewContainer.innerHTML;
     }
 
-    // Обработчики клика по кнопке "Поиск" и нажатия клавиши Enter
     if (searchBtn) searchBtn.addEventListener('click', launchSearch);
     if (searchInput) searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') launchSearch(); });
 
-    function appendNoResultsMessage(container) {
-        const errDiv = document.createElement('div');
-        errDiv.style.padding = '30px';
-        errDiv.style.textAlign = 'center';
-        errDiv.style.color = 'var(--text-muted, #6b7280)';
-        errDiv.textContent = "Шлюз поиска перегружен запросами. Пожалуйста, нажмите кнопку поиска еще раз через 3 секунды.";
-        container.appendChild(errDiv);
-    }
-
-    // ==========================================
-    // 5. ВОЗВРАТ НА ГЛАВНУЮ ПРИ КЛИКЕ НА ЛОГОТИП
-    // ==========================================
+    // Сброс на главный экран Juvox
     if (logo) {
         logo.addEventListener('click', () => {
-            // Возвращаем видимость стартового экрана и прячем выдачу
+            navItems.forEach(nav => nav.classList.remove('active'));
+            const searchTabItem = Array.from(navItems).find(i => i.getAttribute('data-target') === 'home-screen');
+            if (searchTabItem) searchTabItem.classList.add('active');
+
             if (homeScreen) homeScreen.classList.remove('hidden');
             if (webViewContainer) webViewContainer.classList.add('hidden');
             if (topSearchArea) topSearchArea.style.display = 'none';
             
-            // Возвращаем поисковую строку в центр
             if (searchBox) {
                 searchBox.classList.remove('minimized');
                 const wrapper = document.querySelector('.search-wrapper');
                 if (wrapper) wrapper.prepend(searchBox);
             }
-            
-            // Очищаем строку ввода и вкладки
             if (searchInput) searchInput.value = "";
-            document.querySelectorAll('.tab-item').forEach(t => { if (t.textContent.includes('🔍')) t.remove(); });
+            viewSections.forEach(section => {
+                if(section.id !== 'home-screen') section.classList.add('hidden');
+            });
         });
     }
 });
