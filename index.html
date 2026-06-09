@@ -3,27 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juvox</title>
+    <title>Juvox Browser</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
+    <div id="app-container" class="home-mode">
         <h1 class="logo">Juvox</h1>
         
         <div class="search-wrapper">
             <div class="search-box">
-                <select id="engine-select" title="Выберите поисковик">
+                <select id="engine-select" title="Выбор поисковика">
+                    <option value="https://www.google.com/search?igu=1&q=">Google</option>
                     <option value="https://yandex.ru/search/?text=">Яндекс</option>
-                    <option value="https://www.google.com/search?q=">Google</option>
-                    <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
                 </select>
                 
-                <input type="text" id="search-input" placeholder="Введите поисковый запрос..." autocomplete="off">
-                
+                <input type="text" id="search-input" placeholder="Введите запрос или URL..." autocomplete="off">
                 <button id="search-btn">Найти</button>
             </div>
             
-            <ul id="suggestions" class="suggestions-list hidden"></ul>
+            <div id="dropdown-box" class="dropdown-content hidden">
+                <ul id="suggestions" class="list-section"></ul>
+                <div class="history-separator">История поисков:</div>
+                <ul id="history-list" class="list-section"></ul>
+            </div>
+        </div>
+
+        <div class="web-view-container">
+            <iframe id="web-frame" src="about:blank" title="Juvox View"></iframe>
         </div>
     </div>
 
