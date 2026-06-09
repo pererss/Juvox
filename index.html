@@ -22,6 +22,10 @@
                         <span class="nav-icon">🔍</span> 
                         <span class="nav-text">Поиск</span>
                     </li>
+                    <li class="nav-item" id="tools-menu-btn">
+                        <span class="nav-icon">🛠️</span> 
+                        <span class="nav-text">Инструменты</span>
+                    </li>
                     <li class="nav-item" data-target="history-screen" id="history-btn">
                         <span class="nav-icon">📜</span> 
                         <span class="nav-text">История</span>
@@ -38,21 +42,55 @@
             </nav>
 
             <button id="theme-toggle" class="theme-btn">🌙</button>
-            
             <ul id="tabs-container" style="display: none;"><div id="add-tab"></div></ul>
         </aside>
 
+        <div id="floating-tools-panel" class="tools-panel-hidden">
+            <div class="tools-panel-header">
+                <h3>🛠️ Инструменты Juvox</h3>
+                <button id="close-tools-btn">×</button>
+            </div>
+            <div class="tools-panel-content">
+                <div class="mini-tool-box">
+                    <h4>🔐 Генератор паролей</h4>
+                    <button id="tool-gen-pass-btn">Создать пароль</button>
+                    <input type="text" id="tool-pass-output" readonly placeholder="Тут будет пароль">
+                </div>
+                <div class="mini-tool-box">
+                    <h4>📊 Анализ текста</h4>
+                    <textarea id="tool-text-counter" placeholder="Вставьте текст для подсчета символов..."></textarea>
+                    <div id="tool-counter-result">Символов: 0 | Слов: 0</div>
+                </div>
+            </div>
+        </div>
+
         <main class="main-content">
-            
             <div id="top-search-area" style="display: none;"></div>
 
             <section id="home-screen" class="view-section">
                 <div class="search-wrapper">
                     <h1 class="main-title">Juvox</h1>
+                    
                     <div class="search-box">
-                        <input type="text" id="search-input" placeholder="Ищите всё что угодно, считайте примеры..." autocomplete="off">
+                        <input type="text" id="search-input" placeholder="Введите ваш умный хаб-запрос..." autocomplete="off">
                         <button id="search-btn">Найти</button>
                         <div id="suggestions-box" class="suggestions-hidden"></div>
+                    </div>
+
+                    <div class="filter-container">
+                        <span class="filter-label">Искать в базах данных:</span>
+                        <div class="filter-grid">
+                            <label><input type="checkbox" value="wikipedia.org" checked> 🌐 Wikipedia</label>
+                            <label><input type="checkbox" value="reddit.com" checked> 💬 Reddit</label>
+                            <label><input type="checkbox" value="habr.com" checked> 💻 Habr</label>
+                            <label><input type="checkbox" value="stackoverflow.com" checked> 🛠️ StackOverflow</label>
+                            <label><input type="checkbox" value="github.com"> 🐙 GitHub</label>
+                            <label><input type="checkbox" value="youtube.com"> 📺 YouTube</label>
+                            <label><input type="checkbox" value="quora.com"> ❓ Quora</label>
+                            <label><input type="checkbox" value="developer.mozilla.org"> 📄 MDN Docs</label>
+                            <label><input type="checkbox" value="fandom.com"> 🛸 Fandom</label>
+                            <label><input type="checkbox" value="imdb.com"> 🎬 IMDb</label>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -61,52 +99,51 @@
 
             <section id="history-screen" class="view-section hidden">
                 <div class="section-header">
-                    <h2>📜 История запросов Juvox</h2>
-                    <button id="clear-history-btn" class="danger-btn">Очистить историю</button>
+                    <h2>📜 История запросов</h2>
+                    <button id="clear-history-btn" class="danger-btn">Очистить</button>
                 </div>
-                <p class="subtitle">Ваши последние поисковые сессии. Нажмите на любой запрос, чтобы повторить поиск.</p>
                 <div id="history-list-container" class="card-box"></div>
             </section>
 
             <section id="notes-screen" class="view-section hidden">
-                <h2>📝 Встроенный блокнот</h2>
-                <p class="subtitle">Ваш личный автономный черновик. Любой введенный текст сохраняется моментально и без интернета.</p>
+                <h2>📝 Автономный блокнот Juvox</h2>
                 <div class="notepad-container">
-                    <textarea id="juvox-notepad" placeholder="Начните писать свои мысли, ссылки или планы здесь..."></textarea>
+                    <textarea id="juvox-notepad" placeholder="Ваши мысли сохраняются автоматически..."></textarea>
                 </div>
             </section>
 
             <section id="settings-screen" class="view-section hidden">
-                <h2>⚙️ Настройки Juvox</h2>
-                <p class="subtitle">Кастомизация поисковых алгоритмов и конфиденциальности локального браузера.</p>
-                
+                <h2>⚙️ Настройки Системы</h2>
                 <div class="settings-card">
                     <div class="setting-item-row">
                         <div class="setting-info">
-                            <span class="setting-title">Основной поисковый шлюз (Прокси)</span>
-                            <span class="setting-desc">Измените сервер маршрутизации, если глобальный поиск перестает отвечать на запросы.</span>
+                            <span class="setting-title">Поисковый шлюз (CORS Proxy)</span>
                         </div>
                         <select id="setting-proxy-select" class="juvox-select">
-                            <option value="allorigins">AllOrigins Engine (Рекомендуемый / Стабильный)</option>
-                            <option value="corsproxy">CorsProxy IO (Альтернативный / Быстрый)</option>
+                            <option value="allorigins">AllOrigins Engine</option>
+                            <option value="corsproxy">CorsProxy IO</option>
                         </select>
                     </div>
-
                     <hr class="settings-divider">
-
                     <div class="setting-item-row">
                         <div class="setting-info">
-                            <span class="setting-title">Локальное логирование</span>
-                            <span class="setting-desc">Включение или полное отключение сохранения истории поиска в памяти браузера.</span>
+                            <span class="setting-title">Конфиденциальность</span>
                         </div>
                         <button id="btn-toggle-history-save" class="status-btn">Запись истории: ВКЛ</button>
                     </div>
                 </div>
-                
-                <div class="system-footer">Juvox Engine Engine // Core v2.0 // 2026</div>
             </section>
-
         </main>
+
+        <aside class="download-sidebar">
+            <div class="download-box-animated">
+                <div class="dl-badge">PRO</div>
+                <h3>Скачай браузер Juvox</h3>
+                <p>Получи доступ к нейросетям, безлимитным шлюзам, встроенному VPN и защите от трекеров рекламы.</p>
+                <a href="#" class="dl-button" onclick="alert('Ссылка на скачивание десктопной версии Juvox будет доступна в следующем апдейте!'); return false;">Скачать бесплатно</a>
+            </div>
+        </aside>
+
     </div>
 
     <script src="script.js"></script>
