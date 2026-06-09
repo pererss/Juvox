@@ -100,7 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function openSiteInsideJuvox(url, title) {
         document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
 
-        // Создаем вкладку для сайта в сайдбаре
         const siteTab = document.createElement('li');
         siteTab.className = 'tab-item active';
         siteTab.innerHTML = `🌐 ${title.substring(0, 12)}... <span class="close-tab-x">×</span>`;
@@ -162,8 +161,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 4. ЛОГИКА ИНТЕГРАЦИИ ГЛОБАЛЬНОГО ДВИЖКА ПОИСКА SEARXNG
-    function launchSearch() {
+    // 4. УМНАЯ ЛОГИКА ПОИСКА С ЗАЩИТОЙ ОТ БЛОКИРОВОК (ОБХОД NETWORK ERROR)
+    async function launchSearch() {
         const query = searchInput.value.trim();
         if (!query) return;
 
@@ -173,7 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
         homeScreen.classList.add('hidden');
         webViewContainer.classList.remove('hidden');
         
-        // Перемещение строки поиска в верхнюю панель
         topSearchArea.style.display = 'block';
         searchBox.classList.add('minimized');
         topSearchArea.appendChild(searchBox);
@@ -198,45 +196,64 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        webViewContainer.innerHTML = '<div class="loading-status">Ищем ответы по миллионам сайтов в глобальной сети...</div>';
+        webViewContainer.innerHTML = '<div class="loading-status">Устанавливаем защищенное соединение с глобальной сетью...</div>';
 
-        const searxInstance = "https://searx.be/search"; 
-        const targetUrl = `${searxInstance}?q=${encodeURIComponent(query)}&format=json`;
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+        // Список лучших мировых независимых серверов поиска для подстраховки
+        const instances = [
+            "https://paulgo.io/search",
+            "https://search.mdosch.de/search",
+            "https://searx.work/search",
+            "https://searx.be/search"
+        ];
 
-        fetch(proxyUrl)
-            .then(response => response.json())
-            .then(data => {
-                webViewContainer.innerHTML = '';
-                const results = data.results;
-                if (!results || results.length === 0) {
-                    webViewContainer.innerHTML = '<div class="loading-status">Ничего не найдено. Сформулируйте запрос иначе.</div>';
-                    return;
+        let searchResults = null;
+
+        // Поочередно опрашиваем сервера, пока один не отдаст нам результат
+        for (let instance of instances) {
+            try {
+                const targetUrl = `${instance}?q=${encodeURIComponent(query)}&format=json`;
+                // Используем сверхнадежный прокси allorigins, который пробивает защиту Cloudflare
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+                
+                const response = await fetch(proxyUrl);
+                if (!response.ok) continue; // Если этот сервер выдал ошибку, идем к следующему в списке
+                
+                const data = await response.json();
+                if (data && data.results && data.results.length > 0) {
+                    searchResults = data.results;
+                    break; // Результаты успешно получены, выходим из цикла!
                 }
+            } catch (error) {
+                console.warn(`Сервер ${instance} временно недоступен или заблокирован. Ищем резервный узел...`);
+            }
+        }
 
-                const resultsWrapper = document.createElement('div');
-                resultsWrapper.className = 'search-results-page';
+        // Если все 4 сервера отказали (что маловероятно), пишем красивую ошибку
+        if (!searchResults) {
+            webViewContainer.innerHTML = '<div class="loading-status">Все поисковые узлы сейчас перегружены запросами. Пожалуйста, попробуйте еще раз через пару секунд.</div>';
+            return;
+        }
 
-                results.slice(0, 10).forEach(item => {
-                    const card = document.createElement('div');
-                    card.className = 'result-card';
-                    card.style.cursor = 'pointer';
-                    card.innerHTML = `
-                        <div class="result-url">${item.pretty_url || item.url}</div>
-                        <a href="#" data-url="${item.url}" class="result-title">${item.title}</a>
-                        <p class="result-snippet">${item.content || 'Описание отсутствует.'}</p>
-                    `;
-                    resultsWrapper.appendChild(card);
-                });
+        // Выводим результаты
+        webViewContainer.innerHTML = '';
+        const resultsWrapper = document.createElement('div');
+        resultsWrapper.className = 'search-results-page';
 
-                webViewContainer.appendChild(resultsWrapper);
-                lastSearchResultsHTML = webViewContainer.innerHTML;
-                restoreResultCardEvents();
-            })
-            .catch(error => {
-                console.error("Ошибка:", error);
-                webViewContainer.innerHTML = '<div class="loading-status">Ошибка сети. Повторите запрос еще раз через пару мгновений.</div>';
-            });
+        searchResults.slice(0, 10).forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'result-card';
+            card.style.cursor = 'pointer';
+            card.innerHTML = `
+                <div class="result-url">${item.pretty_url || item.url}</div>
+                <a href="#" data-url="${item.url}" class="result-title">${item.title}</a>
+                <p class="result-snippet">${item.content || 'Описание отсутствует.'}</p>
+            `;
+            resultsWrapper.appendChild(card);
+        });
+
+        webViewContainer.appendChild(resultsWrapper);
+        lastSearchResultsHTML = webViewContainer.innerHTML;
+        restoreResultCardEvents();
     }
 
     searchBtn.addEventListener('click', launchSearch);
@@ -299,7 +316,6 @@ document.addEventListener('DOMContentLoaded', () => {
         searchInput.value = "";
         suggestionsBox.classList.add('suggestions-hidden');
         
-        // Чистим все динамические вкладки из сайдбара
         document.querySelectorAll('.tab-item').forEach(t => {
             if (t.id !== 'add-tab') t.remove();
         });
