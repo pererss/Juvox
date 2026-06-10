@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juvox</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+</head>
+<body>
+
+    <div id="toast-container"></div>
+
+    <div class="juvox-container">
+        
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <button id="sidebar-toggle" class="toggle-btn">☰</button>
+                <div class="logo">Juvox</div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item active" data-target="home-screen">
+                        <span class="nav-icon">🔍</span> <span class="nav-text">Поиск</span>
+                    </li>
+                    <li class="nav-item" id="tools-menu-btn">
+                        <span class="nav-icon">🛠️</span> <span class="nav-text">Инструменты</span>
+                    </li>
+                    <li class="nav-item" data-target="history-screen">
+                        <span class="nav-icon">📜</span> <span class="nav-text">История</span>
+                    </li>
+                    <li class="nav-item" data-target="dropzone-screen">
+                        <span class="nav-icon">📥</span> <span class="nav-text">Буфер</span>
+                    </li>
+                    <li class="nav-item" data-target="settings-screen">
+                        <span class="nav-icon">⚙️</span> <span class="nav-text">Настройки</span>
+                    </li>
+                </ul>
+            </nav>
+
+            <button id="theme-toggle" class="theme-btn">🌓 Смена темы</button>
+        </aside>
+
+        <div id="floating-tools-panel" class="tools-panel-hidden">
+            <div class="tools-panel-header">
+                <h3>Инструменты</h3>
+                <button id="close-tools-btn">×</button>
+            </div>
+            <div class="tools-panel-content">
+                
+                <div class="tool-accordion">
+                    <div class="tool-acc-header">🧮 Калькулятор <span class="acc-arrow">▼</span></div>
+                    <div class="tool-acc-body">
+                        <div class="calc-display" id="calc-screen">0</div>
+                        <div class="calc-grid">
+                            <button class="calc-btn action" data-val="C">C</button>
+                            <button class="calc-btn op" data-val="/">/</button>
+                            <button class="calc-btn op" data-val="*">*</button>
+                            <button class="calc-btn op" data-val="-">-</button>
+                            <button class="calc-btn" data-val="7">7</button>
+                            <button class="calc-btn" data-val="8">8</button>
+                            <button class="calc-btn" data-val="9">9</button>
+                            <button class="calc-btn op" data-val="+">+</button>
+                            <button class="calc-btn" data-val="4">4</button>
+                            <button class="calc-btn" data-val="5">5</button>
+                            <button class="calc-btn" data-val="6">6</button>
+                            <button class="calc-btn eq" data-val="=">=</button>
+                            <button class="calc-btn" data-val="1">1</button>
+                            <button class="calc-btn" data-val="2">2</button>
+                            <button class="calc-btn" data-val="3">3</button>
+                            <button class="calc-btn zero" data-val="0">0</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tool-accordion">
+                    <div class="tool-acc-header">⏱️ Секундомер <span class="acc-arrow">▼</span></div>
+                    <div class="tool-acc-body">
+                        <div class="timer-display" id="timer-output">00:00.00</div>
+                        <div style="display:flex; gap:5px;">
+                            <button id="timer-start-btn">Старт</button>
+                            <button id="timer-stop-btn">Пауза</button>
+                            <button id="timer-reset-btn">Сброс</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tool-accordion">
+                    <div class="tool-acc-header">🔐 Пароли <span class="acc-arrow">▼</span></div>
+                    <div class="tool-acc-body">
+                        <div class="tool-field">
+                            <label>Длина: <span id="pass-len-val">12</span></label>
+                            <input type="range" id="tool-pass-length" min="6" max="30" value="12">
+                        </div>
+                        <button id="tool-gen-pass-btn">Создать</button>
+                        <input type="text" id="tool-pass-output" readonly placeholder="Результат..." style="width:100%; margin-top:10px; padding:8px; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-main); color:var(--text-main);">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <main class="main-content" id="main-scroll-panel">
+            <div id="top-search-area" style="display: none;"></div>
+
+            <section id="home-screen" class="view-section">
+                <div class="search-wrapper">
+                    <h1 class="main-title">Juvox</h1>
+                    
+                    <div class="search-box">
+                        <input type="text" id="search-input" placeholder="Введите поисковый запрос..." autocomplete="off">
+                        <button id="search-btn">Найти</button>
+                    </div>
+
+                    <div class="filter-accordion-container">
+                        <div class="filter-acc-header" id="filter-toggle-btn">⚙️ Фильтр источников <span class="arrow">▼</span></div>
+                        <div class="filter-acc-body filter-body-hidden" id="filter-accordion-body">
+                            <div class="filter-grid">
+                                <label><input type="checkbox" value="wikipedia" checked> Wikipedia</label>
+                                <label><input type="checkbox" value="reddit" checked> Reddit</label>
+                                <label><input type="checkbox" value="habr" checked> Хабр</label>
+                                <label><input type="checkbox" value="stackoverflow" checked> StackOverflow</label>
+                                <label><input type="checkbox" value="github" checked> GitHub</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="widget-zone id-hidden" id="main-widgets-zone">
+                        <div class="juvox-widget">
+                            <h4>⏱️ Секундомер</h4>
+                            <div class="widget-time" id="widget-timer-view">00:00</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="web-view-container" class="view-section hidden"></section>
+
+            <section id="history-screen" class="view-section hidden">
+                <div class="content-card-ui">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                        <h2>История поисковых запросов</h2>
+                        <button id="clear-history-btn" class="danger-btn">Очистить</button>
+                    </div>
+                    <div id="history-list-container"></div>
+                </div>
+            </section>
+
+            <section id="dropzone-screen" class="view-section hidden">
+                <div class="content-card-ui">
+                    <h2>Временный буфер файлов</h2>
+                    <p style="opacity:0.6; font-size:0.9rem; margin-bottom:20px;">Перетащите сюда файлы, которые хотите временно зафиксировать в системе.</p>
+                    <div class="drop-zone" id="drop-zone-area">
+                        <span>Перетащите файлы сюда или кликните для загрузки</span>
+                        <input type="file" id="drop-zone-file-input" multiple style="display:none;">
+                    </div>
+                    <div id="drop-zone-list" style="margin-top:20px;"></div>
+                </div>
+            </section>
+
+            <section id="settings-screen" class="view-section hidden">
+                <div class="content-card-ui">
+                    <h2>Настройки окружения</h2>
+                    <div class="settings-block">
+                        <div class="setting-item">
+                            <label>Тема интерфейса</label>
+                            <select id="theme-selector" class="juvox-select">
+                                <option value="light">Светлая</option>
+                                <option value="dark">Темная</option>
+                                <option value="midnight">Полуночная</option>
+                                <option value="glassmorphic">Стеклянная</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>Кастомный фон (изображение)</label>
+                            <input type="file" id="bg-uploader" accept="image/*">
+                        </div>
+                        <div class="setting-item checkbox-item">
+                            <label>
+                                <input type="checkbox" id="setting-toggle-stopwatch"> Выводить секундомер на главную панель
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
