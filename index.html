@@ -77,7 +77,7 @@
         .nav-link.tiktok:hover { background: #ff0050; border-color: #ff0050; box-shadow: 0 0 15px rgba(255,0,80,0.6); }
         .nav-link.tg:hover { background: #0088cc; border-color: #0088cc; box-shadow: 0 0 15px rgba(0,136,204,0.6); }
 
-        /* ГЛАВНЫЙ ЭКРАН (HERO SECTION) */
+        /* ГЛАВНЫЙ ЭКРАН */
         .hero-section {
             position: relative;
             height: 100vh;
@@ -89,7 +89,6 @@
             padding: 0 20px;
         }
 
-        /* Яркие неоновые краски на фоне */
         .hero-bg-glow {
             position: absolute;
             width: 700px;
@@ -173,7 +172,7 @@
             60% { transform: translateY(-6px); }
         }
 
-        /* АНИМАЦИОННОЕ ПРОЛИСТЫВАНИЕ (СЛАЙДЕР ВОЗМОЖНОСТЕЙ) */
+        /* СЕКЦИЯ С АНИМАЦИОННЫМ ПРОЛИСТЫВАНИЕМ */
         .features-section {
             padding: 120px 20px;
             max-width: 1200px;
@@ -227,31 +226,30 @@
         }
 
         .slide-info {
-            flex: 1;
+            flex: 1.1;
         }
 
         .slide-info h3 {
-            font-size: 2.2rem;
+            font-size: 2.3rem;
             margin-bottom: 25px;
             color: #fff;
             font-weight: 900;
         }
 
         .slide-info p {
-            color: #9ca3af;
-            line-height: 1.7;
-            font-size: 1.1rem;
+            color: #a3a3a3;
+            line-height: 1.8;
+            font-size: 1.15rem;
         }
 
         .slide-preview {
-            flex: 1.4;
+            flex: 1.3;
             height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        /* Имитация скриншотов браузера */
         .mockup-screen {
             width: 100%;
             height: 100%;
@@ -270,7 +268,6 @@
             overflow: hidden;
         }
 
-        /* Кнопки управления слайдером */
         .slider-btn {
             position: absolute;
             top: 50%;
@@ -300,7 +297,7 @@
         .prev-btn { left: 20px; }
         .next-btn { right: 20px; }
 
-        /* ЗОНА СКАЧИВАНИЯ КАРТОЧКИ */
+        /* ЗОНА СКАЧИВАНИЯ */
         .download-section {
             padding: 140px 20px;
             text-align: center;
@@ -313,30 +310,28 @@
         .download-cards {
             display: flex;
             justify-content: center;
-            gap: 30px;
-            max-width: 850px;
+            max-width: 500px;
             margin: 0 auto;
         }
 
         .card {
             background: rgba(255, 255, 255, 0.01);
             border: 1px solid rgba(255, 255, 255, 0.04);
-            border-radius: 20px;
-            padding: 45px;
+            border-radius: 24px;
+            padding: 50px;
             flex: 1;
             transition: all 0.3s;
+            border-color: rgba(139, 92, 246, 0.2);
         }
 
         .card:hover { 
             transform: translateY(-8px); 
             background: rgba(255, 255, 255, 0.02); 
-            border-color: rgba(79, 172, 254, 0.3);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            border-color: #8b5cf6;
+            box-shadow: 0 25px 50px rgba(139, 92, 246, 0.2);
         }
-        .card.installer { border-color: rgba(139, 92, 246, 0.2); }
-        .card.installer:hover { border-color: #8b5cf6; }
 
-        .card h3 { font-size: 1.6rem; margin-bottom: 15px; font-weight: 900; }
+        .card h3 { font-size: 1.8rem; margin-bottom: 15px; font-weight: 900; }
         .card p { font-size: 1rem; color: #9ca3af; margin-bottom: 35px; }
 
         .card-btn {
@@ -344,22 +339,18 @@
             text-decoration: none;
             background: #1f2937;
             color: #fff;
-            padding: 16px;
-            border-radius: 12px;
+            padding: 18px;
+            border-radius: 14px;
             font-weight: bold;
             border: 1px solid rgba(255,255,255,0.08);
             cursor: pointer;
             transition: all 0.2s;
         }
         .card:hover .card-btn {
-            background: #4facfe;
-            color: #000;
-            border-color: #4facfe;
-        }
-        .card.installer:hover .card-btn {
             background: #8b5cf6;
             color: #fff;
             border-color: #8b5cf6;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
         }
     </style>
 </head>
@@ -380,7 +371,7 @@
         <div class="hero-bg-glow"></div>
         <div class="hero-content">
             <h1 class="hero-title">JUVOX</h1>
-            <p class="hero-subtitle">Супертехнологичный, чистый и молниеносный браузер нового поколения.<br>Полная независимость от рекламы, умный поиск контента и кастомные стили в один клик.</p>
+            <p class="hero-subtitle">Супертехнологичный, чистый и молниеносный браузер нового поколения.<br>Абсолютный контроль над рабочим пространством, все необходимые инструменты всегда под рукой и умная синхронизация в одно касание.</p>
             <a href="#download-zone" class="download-btn">Скачать Juvox</a>
         </div>
         <div class="scroll-arrow">🔽 ЛИСТАЙ ВНИЗ</div>
@@ -394,8 +385,8 @@
                 
                 <div class="slide active">
                     <div class="slide-info">
-                        <h3>⚡ Абсолютно чистый поиск</h3>
-                        <p>Никаких баннеров, трекеров и навязчивого мусора. Juvox забирает только полезную текстовую информацию и выдаёт её мгновенно.</p>
+                        <h3>⚡ Умный поиск данных</h3>
+                        <p>Ищите информацию эффективно и быстро. Juvox мгновенно собирает структурированные данные из проверенных источников, отсекая лишний хаос и фокусируясь на главном.</p>
                     </div>
                     <div class="slide-preview">
                         <div class="mockup-screen" style="border-color: #4facfe; color: #4facfe;">🔍 [ Скриншот: Умный Поиск ]</div>
@@ -405,7 +396,7 @@
                 <div class="slide">
                     <div class="slide-info">
                         <h3>🎨 Глубокая кастомизация</h3>
-                        <p>Выбирайте готовые темы оформления на ходу или создайте неповторимый стиль, установив свои живые обои на задний план.</p>
+                        <p>Полная свобода самовыражения: свободно меняйте виджеты, настраивайте фоны, шрифты, цветовые палитры и элементы управления так, как пожелаете. Создайте своё идеальное, уникальное визуальное окружение, полностью адаптированное под ваши привычки и настроение.</p>
                     </div>
                     <div class="slide-preview">
                         <div class="mockup-screen" style="background: linear-gradient(135deg, #1e1b4b, #08071a); border-color: #8b5cf6; color: #8b5cf6;">🎭 [ Скриншот: Темы и Стили ]</div>
@@ -414,8 +405,8 @@
 
                 <div class="slide">
                     <div class="slide-info">
-                        <h3>⏱️ Полезные инструменты</h3>
-                        <p>Встроенный точный секундомер, инженерный калькулятор и генератор криптографических паролей доступны в выдвижной панели.</p>
+                        <h3>⏱️ Все нужные инструменты под рукой</h3>
+                        <p>Забудьте о поиске сторонних расширений или открытии лишних вкладок — всё самое важное уже встроено в систему. Высокоточный секундомер, удобный инженерный калькулятор и защищенный генератор сложных криптографических паролей доступны в один клик прямо из вашей панели управления.</p>
                     </div>
                     <div class="slide-preview">
                         <div class="mockup-screen" style="background: linear-gradient(135deg, #062f22, #022c22); border-color: #10b981; color: #10b981;">🛠️ [ Скриншот: Виджет-панель ]</div>
@@ -431,16 +422,11 @@
 
     <section id="download-zone" class="download-section">
         <h2>Получить Juvox</h2>
-        <p>Выберите платформу для развертывания приложения</p>
+        <p>Готов к установке? Скачай официальную сборку приложения</p>
         <div class="download-cards">
             <div class="card">
-                <h3>📦 Исходный код</h3>
-                <p>Полный архив файлов проекта для ручной сборки.</p>
-                <a href="#" class="card-btn">Скачать .ZIP</a>
-            </div>
-            <div class="card installer">
                 <h3>💻 Windows Сборка</h3>
-                <p>Автономный установщик для персональных компьютеров.</p>
+                <p>Официальный автономный установщик Juvox для персональных компьютеров.</p>
                 <a href="#" class="card-btn">Скачать .EXE</a>
             </div>
         </div>
